@@ -1,0 +1,44 @@
+# Environment / secrets
+.env
+*.env
+
+# API keys — never commit
+*secret*
+*api_key*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# Data files with potentially sensitive/large content
+data/posts.json
+data/posts_categorized.json
+data/market_data/
+data/backtest_results/
+data/monitor_seen.json
+data/bot_activity_cache.json
+data/daily_risk_state.json
+data/rss_seen_ids.json
+
+# Keep these (trade logs, correlation results)
+!data/bot_trades.json
+!data/bot_signals.json
+!data/correlation_results.json
+!data/active_scalps.json
+
+# Logs
+*.log
+data/*.log
+
+# Kill switch — don't commit an active kill switch
+data/kill_switch.flag
+
+# OS
+.DS_Store

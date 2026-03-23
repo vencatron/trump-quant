@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrumpQuant v2 — Strike Zone</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+/* === VARIABLES === */
+:root {
+  --bg: #0a0a0f;
+  --bg2: #10101a;
+  --bg-card: #14142a;
+  --bg-card-hover: #1c1c3a;
+  --border: #1e1e36;
+  --text: #e0e0e0;
+  --text2: #8888aa;
+  --text-muted: #555577;
+  --hot: #ff2a2a;
+  --hot2: #ff6600;
+  --cold: #1a3a5c;
+  --cold2: #0d2137;
+  --nuclear: #ff0000;
+  --profit: #00ff88;
+  --loss: #ff3333;
+  --green: #00ff88;
+  --red: #ff3355;
+  --orange: #ff8800;
+  --yellow: #ffcc00;
+  --purple: #aa55ff;
+  --blue: #4488ff;
+  --cyan: #00ccff;
+  --mono: 'Courier New', 'Consolas', monospace;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--sans); overflow-x:hidden; }
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+/* === TOP STRIP — STRIKE METER === */
+.strike-strip {
+  background: linear-gradient(135deg, var(--bg2) 0%, #0d0d1a 100%);
+  border-bottom: 2px solid var(--border);
+  padding: 18px 24px 14px;
+}
+.strike-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.strike-title {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 3px;
+  color: var(--text-muted); text-transform: uppercase;
+}
+.strike-badges {
+  display: flex; gap: 12px; align-items: center;
+}
+.paper-badge {
+  background: var(--yellow); color: #000; padding: 3px 12px; border-radius: 3px;
+  font-weight: 800; font-size: 10px; letter-spacing: 1px;
+}
+.strike-status {
+  text-align: center; margin-bottom: 10px;
+}
+.strike-status-text {
+  font-family: var(--mono); font-size: 36px; font-weight: 900;
+  letter-spacing: 4px; transition: all 0.5s ease;
+}
+.strike-status-text.cold { color: #4488cc; text-shadow: 0 0 20px rgba(68,136,204,0.3); }
+.strike-status-text.warm { color: var(--orange); text-shadow: 0 0 20px rgba(255,136,0,0.4); }
+.strike-status-text.hot { color: var(--hot); text-shadow: 0 0 30px rgba(255,42,42,0.6), 0 0 60px rgba(255,42,42,0.3); }
+.strike-status-text.nuclear {
+  color: var(--nuclear);
+  text-shadow: 0 0 30px rgba(255,0,0,0.8), 0 0 60px rgba(255,0,0,0.5), 0 0 100px rgba(255,0,0,0.3);
+  animation: nuclear-pulse 0.8s ease-in-out infinite;
+}
+@keyframes nuclear-pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.85; transform:scale(1.02); }
+}
+
+/* Strike gauge bar */
+.gauge-track {
+  width: 100%; height: 12px; border-radius: 6px;
+  background: linear-gradient(90deg, var(--cold) 0%, var(--cold2) 20%, #333 40%, var(--hot2) 70%, var(--hot) 85%, var(--nuclear) 100%);
+  position: relative; margin: 8px 0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+}
+.gauge-needle {
+  position: absolute; top: -4px; width: 4px; height: 20px;
+  background: #fff; border-radius: 2px; transition: left 0.8s ease;
+  box-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+.gauge-labels {
+  display: flex; justify-content: space-between;
+  font-family: var(--mono); font-size: 9px; color: var(--text-muted);
+  margin-top: 2px;
+}
+.strike-meta {
+  text-align: center; font-family: var(--mono); font-size: 11px; color: var(--text2);
+  margin-top: 6px;
+}
+.strike-meta span { color: var(--text); font-weight: 600; }
+
+/* === MAIN GRID — ROW 1 === */
+.row1 {
+  display: grid; grid-template-columns: 260px 1fr 300px;
+  gap: 0; height: calc(50vh - 80px); min-height: 320px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* === MAIN GRID — ROW 2 === */
+.row2 {
+  display: grid; grid-template-columns: 60% 40%;
+  gap: 0; height: calc(50vh - 100px); min-height: 280px;
+}
+
+.panel {
+  border-right: 1px solid var(--border); overflow-y: auto; padding: 12px 14px;
+}
+.panel:last-child { border-right: none; }
+
+.panel-title {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase;
+  margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+
+/* === POST CARDS === */
+.post-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+  padding: 8px 10px; margin-bottom: 6px; transition: all 0.2s;
+  animation: slide-in 0.3s ease-out;
+}
+.post-card:hover { background: var(--bg-card-hover); }
+.post-card.iran-post {
+  border-color: var(--nuclear); background: rgba(255,0,0,0.08);
+}
+@keyframes slide-in {
+  from { opacity:0; transform:translateY(-10px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.post-time { font-family:var(--mono); font-size:9px; color:var(--text-muted); margin-bottom:3px; }
+.post-text { font-size:12px; line-height:1.3; color:var(--text); margin-bottom:5px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.post-badges { display:flex; gap:4px; flex-wrap:wrap; }
+.badge {
+  display:inline-block; padding:1px 6px; border-radius:3px; font-size:9px;
+  font-weight:700; font-family:var(--mono); letter-spacing:0.5px;
+}
+.badge-TARIFFS { background:rgba(255,136,0,0.2); color:var(--orange); }
+.badge-TRADE_DEAL { background:rgba(0,255,136,0.15); color:var(--green); }
+.badge-CRYPTO { background:rgba(170,85,255,0.2); color:var(--purple); }
+.badge-FED_ATTACK { background:rgba(255,51,85,0.2); color:var(--red); }
+.badge-MARKET_PUMP { background:rgba(255,204,0,0.2); color:var(--yellow); }
+.badge-IRAN_ESCALATION { background:rgba(255,0,0,0.3); color:#ff4444; }
+.badge-IRAN_DEESCALATION { background:rgba(0,255,136,0.2); color:var(--green); }
+.badge-OIL_SHOCK { background:rgba(255,136,0,0.25); color:var(--orange); }
+.badge-WAR_GENERAL { background:rgba(255,51,85,0.2); color:var(--red); }
+.badge-SPECIFIC_TICKER { background:rgba(68,136,255,0.2); color:var(--blue); }
+.badge-STOCKS_BULLISH { background:rgba(0,204,255,0.15); color:var(--cyan); }
+.iran-badge { background:var(--nuclear); color:#fff; animation:nuclear-pulse 1s infinite; }
+
+/* === HEATMAP GRID (hero) === */
+.heatmap-container { position:relative; width:100%; height:100%; padding:8px; }
+.heatmap-grid {
+  display:grid; gap:2px; width:100%; height:calc(100% - 30px);
+}
+.heatmap-cell {
+  display:flex; align-items:center; justify-content:center; position:relative;
+}
+.heatmap-dot {
+  border-radius:50%; transition:all 0.4s ease; cursor:pointer; position:relative;
+}
+.heatmap-dot.bullish {
+  background: radial-gradient(circle, var(--green) 0%, rgba(0,255,136,0.3) 70%);
+  box-shadow: 0 0 8px rgba(0,255,136,0.5);
+}
+.heatmap-dot.bearish {
+  background: radial-gradient(circle, var(--red) 0%, rgba(255,51,85,0.3) 70%);
+  box-shadow: 0 0 8px rgba(255,51,85,0.5);
+}
+.heatmap-dot.neutral {
+  background: radial-gradient(circle, #555 0%, rgba(85,85,85,0.3) 70%);
+  box-shadow: none;
+}
+.heatmap-dot.active {
+  animation: dot-pulse 1.2s ease-in-out infinite;
+}
+@keyframes dot-pulse {
+  0%,100% { transform:scale(1); opacity:1; }
+  50% { transform:scale(1.3); opacity:0.8; }
+}
+.heatmap-ylabel {
+  font-family:var(--mono); font-size:10px; color:var(--text2);
+  display:flex; align-items:center; padding-right:6px; justify-content:flex-end;
+}
+.heatmap-xlabel {
+  font-family:var(--mono); font-size:8px; color:var(--text-muted);
+  text-align:center; transform:rotate(-45deg); white-space:nowrap;
+}
+.heatmap-tooltip {
+  position:fixed; background:rgba(10,10,20,0.95); border:1px solid var(--border);
+  border-radius:6px; padding:8px 12px; font-family:var(--mono); font-size:11px;
+  color:var(--text); pointer-events:none; z-index:999; display:none;
+  box-shadow:0 4px 20px rgba(0,0,0,0.5);
+}
+
+/* === ACTIVE TRADES PANEL === */
+.trade-card {
+  background:var(--bg-card); border:1px solid var(--border); border-radius:6px;
+  padding:8px 10px; margin-bottom:6px;
+}
+.trade-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.trade-ticker { font-family:var(--mono); font-size:14px; font-weight:800; }
+.trade-ticker.long { color:var(--green); }
+.trade-ticker.short { color:var(--red); }
+.trade-direction {
+  font-family:var(--mono); font-size:9px; padding:2px 6px; border-radius:3px;
+  font-weight:700; letter-spacing:1px;
+}
+.trade-direction.long { background:rgba(0,255,136,0.15); color:var(--green); }
+.trade-direction.short { background:rgba(255,51,85,0.15); color:var(--red); }
+.trade-pnl { font-family:var(--mono); font-size:13px; font-weight:700; }
+.trade-pnl.positive { color:var(--profit); }
+.trade-pnl.negative { color:var(--loss); }
+.trade-meta { font-family:var(--mono); font-size:9px; color:var(--text-muted); }
+.trade-price-bar {
+  height:4px; border-radius:2px; background:var(--border); margin-top:4px; position:relative;
+}
+.trade-price-fill {
+  height:100%; border-radius:2px; position:absolute; left:0; top:0;
+}
+
+/* === BOT ACTIVITY CHART === */
+.chart-container {
+  position:relative; width:100%; height:calc(100% - 30px);
+}
+
+/* === SIGNAL PLAYBOOK === */
+.playbook-card {
+  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
+  padding:12px 14px; margin-bottom:8px;
+}
+.playbook-setup {
+  font-family:var(--mono); font-size:11px; letter-spacing:1px;
+  color:var(--yellow); margin-bottom:8px;
+}
+.playbook-step {
+  display:flex; align-items:center; gap:8px; margin-bottom:6px;
+  font-family:var(--mono); font-size:12px;
+}
+.playbook-step-num {
+  width:20px; height:20px; border-radius:50%; display:flex;
+  align-items:center; justify-content:center; font-size:10px; font-weight:800;
+  background:rgba(68,136,255,0.2); color:var(--blue);
+}
+.playbook-winrate {
+  font-family:var(--mono); font-size:10px; color:var(--text2); margin-top:8px;
+}
+.execute-btn {
+  width:100%; padding:10px; border:none; border-radius:6px; cursor:pointer;
+  font-family:var(--mono); font-size:14px; font-weight:800; letter-spacing:2px;
+  background:linear-gradient(135deg, #00aa55, #00ff88); color:#000;
+  margin-top:8px; transition:all 0.2s;
+}
+.execute-btn:hover { transform:translateY(-1px); box-shadow:0 4px 20px rgba(0,255,136,0.4); }
+.execute-btn:active { transform:translateY(0); }
+.execute-btn.short-btn { background:linear-gradient(135deg, #aa2244, #ff3355); color:#fff; }
+
+/* === BOTTOM BAR === */
+.bottom-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 24px; background:var(--bg2); border-top:1px solid var(--border);
+  font-family:var(--mono); font-size:12px;
+}
+.bottom-stats { display:flex; gap:28px; }
+.bottom-stat-label { color:var(--text-muted); font-size:9px; letter-spacing:1px; }
+.bottom-stat-val { font-weight:700; font-size:14px; }
+.bottom-stat-val.positive { color:var(--profit); }
+.bottom-stat-val.negative { color:var(--loss); }
+.kill-switch {
+  display:flex; align-items:center; gap:8px; cursor:pointer;
+}
+.kill-switch-toggle {
+  width:36px; height:18px; border-radius:9px; background:var(--border);
+  position:relative; transition:background 0.3s; cursor:pointer;
+}
+.kill-switch-toggle.active { background:var(--red); }
+.kill-switch-dot {
+  width:14px; height:14px; border-radius:50%; background:#fff;
+  position:absolute; top:2px; left:2px; transition:left 0.3s;
+}
+.kill-switch-toggle.active .kill-switch-dot { left:20px; }
+.kill-label { font-size:9px; color:var(--text-muted); letter-spacing:1px; }
+</style>
+</head>
+<body>
+
+<!-- TOP STRIP — STRIKE METER -->
+<div class="strike-strip">
+  <div class="strike-header">
+    <div class="strike-title">TrumpQuant v2 — Strike Zone</div>
+    <div class="strike-badges">
+      <span class="paper-badge">PAPER MODE</span>
+    </div>
+  </div>
+  <div class="strike-status">
+    <div id="strikeText" class="strike-status-text cold">&#x1F976; COLD — Bots Inactive</div>
+  </div>
+  <div class="gauge-track">
+    <div id="gaugeNeedle" class="gauge-needle" style="left:10%"></div>
+  </div>
+  <div class="gauge-labels">
+    <span>COLD</span><span>WARM</span><span>HOT</span><span>NUCLEAR</span>
+  </div>
+  <div class="strike-meta">
+    Last post: <span id="lastPostAgo">--</span> ago &nbsp;|&nbsp;
+    Open trades: <span id="openTradeCount">0</span> &nbsp;|&nbsp;
+    Heat: <span id="heatPercent">--</span>
+  </div>
+</div>
+
+<!-- ROW 1 -->
+<div class="row1">
+  <!-- LEFT: Post Feed -->
+  <div class="panel" id="postPanel">
+    <div class="panel-title">Trump Post Feed</div>
+    <div id="postFeed"></div>
+  </div>
+
+  <!-- CENTER: Dotted Heatmap -->
+  <div class="panel" style="overflow:hidden;">
+    <div class="panel-title">Signal Heatmap — Posts × Tickers</div>
+    <div class="heatmap-container" id="heatmapContainer"></div>
+  </div>
+
+  <!-- RIGHT: Active Trades -->
+  <div class="panel">
+    <div class="panel-title">Active Positions</div>
+    <div id="activeTrades"></div>
+  </div>
+</div>
+
+<!-- ROW 2 -->
+<div class="row2">
+  <!-- LEFT: Bot Activity Timeline -->
+  <div class="panel">
+    <div class="panel-title">Bot Activity Timeline (4hr)</div>
+    <div class="chart-container">
+      <canvas id="botChart"></canvas>
+    </div>
+  </div>
+
+  <!-- RIGHT: Signal Playbook -->
+  <div class="panel">
+    <div class="panel-title">Signal Playbook — What To Do Now</div>
+    <div id="playbookPanel"></div>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar">
+  <div class="bottom-stats">
+    <div>
+      <div class="bottom-stat-label">TODAY P&L</div>
+      <div id="dailyPnl" class="bottom-stat-val">$0.00</div>
+    </div>
+    <div>
+      <div class="bottom-stat-label">WIN RATE</div>
+      <div id="winRate" class="bottom-stat-val">--</div>
+    </div>
+    <div>
+      <div class="bottom-stat-label">TOTAL TRADES</div>
+      <div id="totalTrades" class="bottom-stat-val">0</div>
+    </div>
+    <div>
+      <div class="bottom-stat-label">BEST TRADE</div>
+      <div id="bestTrade" class="bottom-stat-val">--</div>
+    </div>
+  </div>
+  <div class="kill-switch" onclick="toggleKillSwitch()">
+    <span class="kill-label">KILL SWITCH</span>
+    <div id="killToggle" class="kill-switch-toggle">
+      <div class="kill-switch-dot"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLTIP -->
+<div id="heatmapTooltip" class="heatmap-tooltip"></div>
+
+<script>
+// === STATE ===
+let posts = [];
+let activeTrades = [];
+let playbook = {};
+let heatScores = {};
+let marketSnapshot = {};
+let statusData = {};
+let botHistory = []; // synthetic history for chart
+
+const TICKERS = ['SPY','QQQ','GLD','UVIX','COIN','TSLA'];
+
+// === INIT ===
+async function init() {
+  await Promise.all([
+    fetchPosts(), fetchActiveTrades(), fetchPlaybook(),
+    fetchHeat(), fetchMarketSnapshot(), fetchStatus(), fetchPerformance()
+  ]);
+  renderPosts();
+  renderHeatmap();
+  renderActiveTrades();
+  renderPlaybook();
+  initBotChart();
+  startSSE();
+  setInterval(refresh, 8000);
+}
+
+async function refresh() {
+  await Promise.all([
+    fetchStatus(), fetchActiveTrades(), fetchHeat(),
+    fetchMarketSnapshot(), fetchPerformance()
+  ]);
+  updateStrikeMeter();
+  renderActiveTrades();
+  updateBotChart();
+}
+
+// === FETCH ===
+async function fetchPosts() {
+  try { posts = await (await fetch('/api/posts')).json(); } catch(e) { console.error(e); }
+}
+async function fetchActiveTrades() {
+  try { activeTrades = await (await fetch('/api/active_trades')).json(); } catch(e) { console.error(e); }
+}
+async function fetchPlaybook() {
+  try { playbook = await (await fetch('/api/playbook')).json(); } catch(e) { console.error(e); }
+}
+async function fetchHeat() {
+  try { heatScores = await (await fetch('/api/heat')).json(); } catch(e) { console.error(e); }
+}
+async function fetchMarketSnapshot() {
+  try { marketSnapshot = await (await fetch('/api/market_snapshot')).json(); } catch(e) { console.error(e); }
+}
+async function fetchStatus() {
+  try { statusData = await (await fetch('/api/status')).json(); updateStrikeMeter(); } catch(e) { console.error(e); }
+}
+async function fetchPerformance() {
+  try {
+    const p = await (await fetch('/api/performance')).json();
+    const pnlEl = document.getElementById('dailyPnl');
+    pnlEl.textContent = `$${p.daily_pnl >= 0 ? '+' : ''}${p.daily_pnl.toFixed(2)}`;
+    pnlEl.className = 'bottom-stat-val ' + (p.daily_pnl >= 0 ? 'positive' : 'negative');
+    document.getElementById('winRate').textContent = `${p.win_rate}%`;
+    document.getElementById('totalTrades').textContent = p.total_trades;
+    if (p.best_trade) {
+      document.getElementById('bestTrade').textContent = `${p.best_trade.ticker} +$${p.best_trade.pnl.toFixed(0)}`;
+      document.getElementById('bestTrade').className = 'bottom-stat-val positive';
+    }
+  } catch(e) { console.error(e); }
+}
+
+// === STRIKE METER ===
+function updateStrikeMeter() {
+  const el = document.getElementById('strikeText');
+  const needle = document.getElementById('gaugeNeedle');
+  const level = statusData.heat_level || 'COLD';
+  const score = statusData.heat_score || 15;
+  const mins = statusData.minutes_since_post;
+
+  el.className = 'strike-status-text ' + level.toLowerCase();
+
+  if (level === 'NUCLEAR') {
+    el.innerHTML = '☢️ NUCLEAR — STRIKE NOW';
+    needle.style.left = '95%';
+  } else if (level === 'HOT') {
+    el.innerHTML = '🔥 HOT — Signal Active';
+    needle.style.left = '72%';
+  } else if (level === 'WARM') {
+    el.innerHTML = '🌡️ WARM — Post Detected';
+    needle.style.left = '45%';
+  } else {
+    el.innerHTML = '🥶 COLD — Bots Inactive';
+    needle.style.left = '10%';
+  }
+
+  if (mins < 999) {
+    const h = Math.floor(mins/60);
+    const m = Math.floor(mins%60);
+    document.getElementById('lastPostAgo').textContent = h > 0 ? `${h}h ${m}m` : `${m}m`;
+  }
+  document.getElementById('openTradeCount').textContent = statusData.open_positions || 0;
+  document.getElementById('heatPercent').textContent = `${score}/100`;
+}
+
+// === POSTS ===
+function renderPosts() {
+  const feed = document.getElementById('postFeed');
+  const sorted = [...posts].reverse().slice(0, 15);
+  feed.innerHTML = sorted.map(p => {
+    const cats = p.categories || [];
+    const isIran = cats.some(c => c.includes('IRAN') || c.includes('WAR'));
+    const badges = cats.map(c => `<span class="badge badge-${c}">${c}</span>`).join('');
+    const iranBadge = isIran ? '<span class="badge iran-badge">☢️</span>' : '';
+    const d = p.date ? new Date(p.date).toLocaleString('en-US', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+    return `
+      <div class="post-card ${isIran ? 'iran-post' : ''}">
+        <div class="post-time">${d} • ${p.source || ''}</div>
+        <div class="post-text">${escHtml(p.text || '')}</div>
+        <div class="post-badges">${iranBadge}${badges}</div>
+      </div>`;
+  }).join('');
+}
+
+// === HEATMAP ===
+function renderHeatmap() {
+  const container = document.getElementById('heatmapContainer');
+  const recentPosts = [...posts].reverse().slice(0, 16);
+  const nPosts = recentPosts.length || 1;
+
+  // Build grid: tickers as rows, posts as columns, plus label column
+  const cols = nPosts + 1;
+  const rows = TICKERS.length;
+  container.style.display = 'grid';
+  container.style.gridTemplateColumns = `50px repeat(${nPosts}, 1fr)`;
+  container.style.gridTemplateRows = `repeat(${rows}, 1fr) 30px`;
+  container.innerHTML = '';
+
+  const tooltip = document.getElementById('heatmapTooltip');
+
+  TICKERS.forEach((ticker, ri) => {
+    // Y-axis label
+    const lbl = document.createElement('div');
+    lbl.className = 'heatmap-ylabel';
+    lbl.textContent = ticker;
+    container.appendChild(lbl);
+
+    recentPosts.forEach((post, ci) => {
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-cell';
+
+      const cats = post.categories || [];
+      let signal = findSignalForTickerAndCats(ticker, cats);
+
+      const dot = document.createElement('div');
+      dot.className = 'heatmap-dot';
+
+      if (signal) {
+        const strength = Math.abs(signal.avg_return);
+        const size = Math.max(8, Math.min(36, strength * 10));
+        dot.style.width = size + 'px';
+        dot.style.height = size + 'px';
+        dot.classList.add(signal.direction === 'BULLISH' ? 'bullish' : 'bearish');
+        if (ci < 3) dot.classList.add('active'); // recent = pulsing
+
+        dot.addEventListener('mouseenter', (e) => {
+          tooltip.style.display = 'block';
+          tooltip.innerHTML = `<strong>${ticker}</strong> — ${signal.direction}<br>` +
+            `Signal: ${cats.join(', ')}<br>` +
+            `Avg return: ${signal.avg_return > 0 ? '+' : ''}${signal.avg_return}%<br>` +
+            `Window: ${signal.window}`;
+        });
+        dot.addEventListener('mousemove', (e) => {
+          tooltip.style.left = (e.clientX + 12) + 'px';
+          tooltip.style.top = (e.clientY - 10) + 'px';
+        });
+        dot.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+      } else {
+        dot.style.width = '6px';
+        dot.style.height = '6px';
+        dot.classList.add('neutral');
+      }
+
+      cell.appendChild(dot);
+      container.appendChild(cell);
+    });
+  });
+
+  // Bottom row: x-axis labels
+  const spacer = document.createElement('div');
+  container.appendChild(spacer);
+  recentPosts.forEach(p => {
+    const xl = document.createElement('div');
+    xl.className = 'heatmap-xlabel';
+    const d = p.date ? new Date(p.date) : null;
+    xl.textContent = d ? `${d.getMonth()+1}/${d.getDate()}` : '?';
+    container.appendChild(xl);
+  });
+}
+
+function findSignalForTickerAndCats(ticker, cats) {
+  for (const cat of cats) {
+    const signals = playbook[cat];
+    if (!signals) continue;
+    for (const s of signals) {
+      if (s.ticker === ticker) return s;
+    }
+  }
+  return null;
+}
+
+// === ACTIVE TRADES ===
+function renderActiveTrades() {
+  const el = document.getElementById('activeTrades');
+  if (!activeTrades.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text-muted);font-family:var(--mono);font-size:11px;padding:20px;">No open positions</div>';
+    return;
+  }
+  el.innerHTML = activeTrades.map(t => {
+    const isLong = !t.direction || !t.direction.includes('SHORT');
+    const pnl = t.unrealized_pnl || 0;
+    const pnlPct = t.unrealized_pnl_pct || 0;
+    const pnlClass = pnl >= 0 ? 'positive' : 'negative';
+    const dirClass = isLong ? 'long' : 'short';
+    const exitBy = t.exit_by ? new Date(t.exit_by).toLocaleString('en-US', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '--';
+    const targetPct = t.target_pct || 1;
+    const progress = Math.min(100, Math.max(0, (pnlPct / targetPct) * 100));
+    const fillColor = pnl >= 0 ? 'var(--profit)' : 'var(--loss)';
+
+    return `
+      <div class="trade-card">
+        <div class="trade-header">
+          <span class="trade-ticker ${dirClass}">${t.actual_ticker || t.signal_ticker || '?'}</span>
+          <span class="trade-direction ${dirClass}">${isLong ? 'LONG' : 'SHORT'}</span>
+        </div>
+        <div class="trade-pnl ${pnlClass}">$${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)} (${pnlPct >= 0 ? '+' : ''}${pnlPct.toFixed(2)}%)</div>
+        <div class="trade-meta">${t.shares || 0} shares @ $${(t.entry_price || 0).toFixed(2)} • Exit: ${exitBy}</div>
+        <div class="trade-price-bar">
+          <div class="trade-price-fill" style="width:${Math.abs(progress)}%;background:${fillColor}"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// === PLAYBOOK ===
+function renderPlaybook() {
+  const el = document.getElementById('playbookPanel');
+
+  // Find current setup from most recent post
+  const lastPost = posts.length ? posts[posts.length - 1] : null;
+  const cats = lastPost ? (lastPost.categories || []) : [];
+  let activeCat = null;
+  let activeSignals = [];
+
+  for (const c of cats) {
+    if (playbook[c]) {
+      activeCat = c;
+      activeSignals = playbook[c];
+      break;
+    }
+  }
+
+  if (!activeCat) {
+    el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text-muted);font-family:var(--mono);font-size:11px;">Waiting for signal...</div>';
+    return;
+  }
+
+  const cards = activeSignals.map(sig => {
+    const isShort = sig.action === 'SHORT';
+    const actualTicker = isShort && ({'QQQ':'SQQQ','SPY':'SPXU'}[sig.ticker])
+      ? {'QQQ':'SQQQ','SPY':'SPXU'}[sig.ticker] : sig.ticker;
+    const price = marketSnapshot[sig.ticker] ? marketSnapshot[sig.ticker].price : '---';
+    const btnClass = isShort ? 'execute-btn short-btn' : 'execute-btn';
+
+    return `
+      <div class="playbook-card">
+        <div class="playbook-setup">SETUP: ${activeCat} → ${sig.ticker} ${sig.direction}</div>
+        <div class="playbook-step">
+          <div class="playbook-step-num">1</div>
+          <div>ENTER: <strong>${isShort ? 'BUY ' + actualTicker + ' (inverse)' : 'BUY ' + sig.ticker}</strong> @ $${price}</div>
+        </div>
+        <div class="playbook-step">
+          <div class="playbook-step-num">2</div>
+          <div>TARGET: <strong>${sig.avg_return > 0 ? '+' : ''}${sig.avg_return}%</strong> in ${sig.window}</div>
+        </div>
+        <div class="playbook-step">
+          <div class="playbook-step-num">3</div>
+          <div>STOP: <strong>-0.5%</strong></div>
+        </div>
+        <div class="playbook-winrate">Confidence: ${sig.confidence} | Historical avg: ${sig.avg_return > 0 ? '+' : ''}${sig.avg_return}%</div>
+        <button class="${btnClass}" onclick="executeTrade('${sig.ticker}','${sig.action}','${activeCat}')">
+          EXECUTE ${sig.action} ${sig.ticker}
+        </button>
+      </div>`;
+  });
+
+  el.innerHTML = cards.join('');
+}
+
+// === BOT CHART ===
+let botChart = null;
+function initBotChart() {
+  // Generate synthetic 4hr history
+  const now = Date.now();
+  for (let i = 48; i >= 0; i--) {
+    const t = now - i * 5 * 60000;
+    botHistory.push({ t, score: 25 + Math.random() * 30 });
+  }
+
+  const ctx = document.getElementById('botChart').getContext('2d');
+  botChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: botHistory.map(h => new Date(h.t).toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'})),
+      datasets: [{
+        label: 'Bot Heat Score',
+        data: botHistory.map(h => h.score),
+        borderColor: '#ff6600',
+        backgroundColor: function(context) {
+          const chart = context.chart;
+          const {ctx: c, chartArea} = chart;
+          if (!chartArea) return '#ff660033';
+          const gradient = c.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+          gradient.addColorStop(0, 'rgba(13,33,55,0.3)');
+          gradient.addColorStop(0.5, 'rgba(255,136,0,0.15)');
+          gradient.addColorStop(1, 'rgba(255,42,42,0.3)');
+          return gradient;
+        },
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        borderWidth: 2,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        annotation: {},
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(30,30,54,0.5)' },
+          ticks: { color: '#555577', font: { size: 9, family: 'Courier New' }, maxTicksLimit: 12 },
+        },
+        y: {
+          min: 0, max: 100,
+          grid: { color: 'rgba(30,30,54,0.5)' },
+          ticks: { color: '#555577', font: { size: 9, family: 'Courier New' } },
+        }
+      },
+      interaction: { intersect: false, mode: 'index' },
+    }
+  });
+}
+
+function updateBotChart() {
+  if (!botChart) return;
+  // Add new data point
+  const avgHeat = Object.values(heatScores).reduce((a,b) => a+b, 0) / Math.max(1, Object.keys(heatScores).length);
+  botHistory.push({ t: Date.now(), score: avgHeat || (25 + Math.random() * 30) });
+  if (botHistory.length > 60) botHistory.shift();
+
+  botChart.data.labels = botHistory.map(h => new Date(h.t).toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit'}));
+  botChart.data.datasets[0].data = botHistory.map(h => h.score);
+  botChart.update('none');
+}
+
+// === ACTIONS ===
+async function executeTrade(ticker, direction, signal) {
+  if (!confirm(`Execute ${direction} ${ticker} ($2,500 paper)?`)) return;
+  try {
+    const resp = await fetch('/api/execute_trade', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ ticker, direction, signal }),
+    });
+    const data = await resp.json();
+    if (data.error) {
+      alert('Error: ' + data.error);
+    } else {
+      alert(`Trade ${data.status}: ${direction} ${ticker}`);
+      fetchActiveTrades().then(renderActiveTrades);
+    }
+  } catch(e) { alert('Trade failed: ' + e.message); }
+}
+
+async function toggleKillSwitch() {
+  try {
+    const resp = await fetch('/api/killswitch', { method: 'POST' });
+    const data = await resp.json();
+    const toggle = document.getElementById('killToggle');
+    if (data.kill_switch_active) {
+      toggle.classList.add('active');
+    } else {
+      toggle.classList.remove('active');
+    }
+  } catch(e) { console.error(e); }
+}
+
+// === SSE ===
+function startSSE() {
+  const es = new EventSource('/api/stream');
+  es.addEventListener('status_update', (e) => {
+    try {
+      statusData = JSON.parse(e.data);
+      updateStrikeMeter();
+    } catch(err) {}
+  });
+  es.addEventListener('new_post', (e) => {
+    try {
+      const p = JSON.parse(e.data);
+      posts.push(p);
+      renderPosts();
+      renderHeatmap();
+      renderPlaybook();
+    } catch(err) {}
+  });
+  es.addEventListener('new_trade', (e) => {
+    try {
+      fetchActiveTrades().then(renderActiveTrades);
+      fetchPerformance();
+    } catch(err) {}
+  });
+  es.onerror = () => { setTimeout(startSSE, 5000); es.close(); };
+}
+
+// === UTIL ===
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Boot
+init();
+</script>
+</body>
+</html>
