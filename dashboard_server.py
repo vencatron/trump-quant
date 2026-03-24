@@ -105,14 +105,39 @@ def _read_jsonl(filepath: Path) -> list[dict]:
     return results
 
 
+# In-memory caches — load once at startup, refresh every 5 min
+_posts_cache: list = []
+_posts_cache_time: float = 0.0
+_trades_cache: list = []
+_trades_cache_time: float = 0.0
+POSTS_CACHE_TTL = 300  # 5 minutes
+TRADES_CACHE_TTL = 60  # 1 minute
+
 def _load_posts() -> list[dict]:
-    data = _read_json(DATA_DIR / "posts_categorized.json")
-    return data if isinstance(data, list) else []
+    global _posts_cache, _posts_cache_time
+    now = time.time()
+    if now - _posts_cache_time < POSTS_CACHE_TTL and _posts_cache:
+        return _posts_cache
+    # Only load posts_categorized.json (small) — never load 14MB posts.json
+    cat_file = DATA_DIR / "posts_categorized.json"
+    if cat_file.exists() and cat_file.stat().st_size > 10:
+        data = _read_json(cat_file)
+        _posts_cache = data if isinstance(data, list) else []
+    else:
+        _posts_cache = []
+    _posts_cache_time = now
+    return _posts_cache
 
 
 def _load_trades() -> list[dict]:
+    global _trades_cache, _trades_cache_time
+    now = time.time()
+    if now - _trades_cache_time < TRADES_CACHE_TTL and _trades_cache:
+        return _trades_cache
     data = _read_json(DATA_DIR / "bot_trades.json")
-    return data if isinstance(data, list) else []
+    _trades_cache = data[-200:] if isinstance(data, list) else []  # only last 200
+    _trades_cache_time = now
+    return _trades_cache
 
 
 def _load_signals() -> list[dict]:
