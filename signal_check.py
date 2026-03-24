@@ -211,10 +211,21 @@ def execute_paper_trade(signal, post, category):
             side = "sell"
             trade_direction = "SHORT"
 
+    # Apply regime multiplier to position size
+    try:
+        from regime_detector import get_regime_multiplier
+        regime_mult = get_regime_multiplier()
+    except Exception:
+        regime_mult = 1.0
+
+    # Apply learned signal weight
+    learned_mult = signal.get("learned_size_multiplier", 1.0)
+    adjusted_size = POSITION_SIZE * regime_mult * learned_mult
+
     # Get price and calculate shares
     price = get_current_price(actual_ticker) if actual_ticker else None
     if price and price > 0:
-        shares = max(1, int(POSITION_SIZE / price))
+        shares = max(1, int(adjusted_size / price))
     else:
         shares = 1
         price = 0
@@ -259,6 +270,20 @@ def execute_paper_trade(signal, post, category):
         "market_was_open": market_open,
     }
     save_trade(trade)
+
+    # Save to active_scalps.json for EOD close tracking
+    scalps_file = os.path.join(DATA_DIR, "active_scalps.json")
+    scalps = []
+    if os.path.exists(scalps_file):
+        try:
+            with open(scalps_file) as f:
+                scalps = json.load(f)
+        except (json.JSONDecodeError, ValueError):
+            scalps = []
+    scalps.append(trade)
+    with open(scalps_file, "w") as f:
+        json.dump(scalps, f, indent=2)
+
     return trade
 
 
@@ -407,6 +432,23 @@ def send_telegram(text):
 
 def main():
     os.makedirs(DATA_DIR, exist_ok=True)
+
+    # Refresh regime every 4 hours
+    regime_file = os.path.join(DATA_DIR, "market_regime.json")
+    if not os.path.exists(regime_file) or (time.time() - os.path.getmtime(regime_file)) > 14400:
+        try:
+            from regime_detector import detect_regime
+            detect_regime()
+        except Exception as e:
+            print(f"Regime detection skipped: {e}")
+
+    # Apply learned weights to signals
+    try:
+        from learning_engine import calculate_signal_weights, apply_weights_to_signal
+        learned_weights = calculate_signal_weights()
+    except Exception:
+        learned_weights = {}
+
     seen = load_seen()
     posts = fetch_posts()
     fired = 0
@@ -434,6 +476,11 @@ def main():
                         best_category = cat
 
         if best_signal:
+            # Apply learned weights
+            if learned_weights and best_category:
+                best_signal = apply_weights_to_signal(
+                    {**best_signal, "signal_category": best_category}, learned_weights
+                )
             # Execute paper trade
             trade = execute_paper_trade(best_signal, post, best_category)
 
@@ -478,6 +525,14 @@ if __name__ == "__main__":
     main()
 
 
+def _find_trade_meta(ticker, active_scalps):
+    """Find trade metadata from active_scalps for a given ticker."""
+    for t in (active_scalps or []):
+        if t.get("actual_ticker") == ticker or t.get("signal_ticker") == ticker:
+            return t
+    return {}
+
+
 def close_eod_positions():
     """Close all open paper positions at EOD (called at 3:45 PM ET)."""
     trades_file = os.path.join(DATA_DIR, "active_scalps.json")
@@ -514,7 +569,7 @@ def close_eod_positions():
         except Exception as e:
             print(f"Failed to close {ticker}: {e}")
 
-    # Log closed trades
+    # Log closed trades and record outcomes for learning engine
     if closed:
         total_pnl = sum(t["pnl"] for t in closed)
         msg = (
@@ -544,6 +599,31 @@ def close_eod_positions():
             })
         with open(bot_trades_file, "w") as f:
             json.dump(existing, f, indent=2)
+
+        # Record outcomes in learning engine
+        try:
+            from learning_engine import record_outcome
+            for t in closed:
+                # Match closed position to active scalp metadata
+                trade_meta = _find_trade_meta(t["ticker"], active)
+                trade_result = {
+                    "signal_category": trade_meta.get("signal_category", "UNKNOWN"),
+                    "signal_ticker": trade_meta.get("signal_ticker", t["ticker"]),
+                    "actual_ticker": t["ticker"],
+                    "direction": trade_meta.get("direction", "LONG"),
+                    "entry_price": trade_meta.get("entry_price", 0),
+                    "exit_price": trade_meta.get("entry_price", 0) * (1 + t["pnl"] / (trade_meta.get("position_value", 1) or 1)) if trade_meta.get("entry_price") else 0,
+                    "avg_return": trade_meta.get("avg_return", 0),
+                    "target_pct": trade_meta.get("target_pct", 0),
+                    "stop_loss_pct": trade_meta.get("stop_loss_pct", -0.5),
+                    "exit_reason": "EOD",
+                    "trade_id": trade_meta.get("trade_id", ""),
+                    "timestamp": trade_meta.get("timestamp", ""),
+                    "closed_at": datetime.now(timezone.utc).isoformat(),
+                }
+                record_outcome(trade_result)
+        except Exception as e:
+            print(f"  Learning engine record error: {e}")
 
     # Clear active scalps
     with open(trades_file, "w") as f:
