@@ -1,5 +1,5 @@
 """
-TrumpQuant Daily Email Report
+MarketQuant Daily Email Report
 Sends a full trading summary to aaron@vencat.com and ron@vencat.com
 Run at 4:30pm ET every market day.
 """
@@ -187,7 +187,7 @@ th {{ text-align:left; padding:8px; color:#666; font-size:11px; text-transform:u
 <body>
 <div class="container">
   <div class="header">
-    <h1>🏦 TrumpQuant Daily Report</h1>
+    <h1>🏦 MarketQuant Daily Report</h1>
     <div class="date">{date_str} · Paper Trading · Alpaca Markets</div>
   </div>
 
@@ -249,8 +249,8 @@ th {{ text-align:left; padding:8px; color:#666; font-size:11px; text-transform:u
   </div>
 
   <div class="footer">
-    TrumpQuant · Vencat Capital · Paper Trading Only · Not Financial Advice<br>
-    github.com/vencatron/trump-quant · {date_str}
+    MarketQuant · Vencat Capital · Paper Trading Only · Not Financial Advice<br>
+    github.com/vencatron/market-quant · {date_str}
   </div>
 </div>
 </body></html>"""
@@ -260,7 +260,7 @@ th {{ text-align:left; padding:8px; color:#666; font-size:11px; text-transform:u
 def send_daily_report():
     today = datetime.now(timezone.utc)
     date_str = today.strftime("%A, %B %d, %Y")
-    subject = f"TrumpQuant Daily Report — {today.strftime('%b %d, %Y')}"
+    subject = f"MarketQuant Daily Report — {today.strftime('%b %d, %Y')}"
 
     print(f"Building daily report for {date_str}...")
 
@@ -273,7 +273,7 @@ def send_daily_report():
     html = build_html_report(account, positions, orders, today_pnl, trades_today, swing_positions, date_str)
 
     # Save HTML to temp file
-    html_file = "/tmp/trumpquant_daily_report.html"
+    html_file = "/tmp/marketquant_daily_report.html"
     with open(html_file, "w") as f:
         f.write(html)
 
