@@ -377,6 +377,20 @@ async def get_playbook():
     return TOP_SIGNALS
 
 
+@app.get("/api/swings")
+async def get_swings():
+    swing_file = DATA_DIR / "swing_positions.json"
+    if not swing_file.exists():
+        return {"positions": [], "summary": {"total_pnl": 0, "count": 0}}
+    try:
+        with open(swing_file) as f:
+            positions = json.load(f)
+        total_pnl = sum(p.get("current_pnl_dollars", 0) for p in positions)
+        return {"positions": positions, "summary": {"total_pnl": round(total_pnl, 2), "count": len(positions)}}
+    except (json.JSONDecodeError, ValueError):
+        return {"positions": [], "summary": {"total_pnl": 0, "count": 0}}
+
+
 @app.get("/api/performance")
 async def get_performance():
     """Performance stats for the bottom bar."""

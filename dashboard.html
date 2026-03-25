@@ -147,6 +147,13 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:-apple-system,'Segoe UI',sans-
 <div id=tsc class=tsc></div>
 </div>
 </div>
+<div id="t-swing" class=tsec>
+<div class=cd>
+<div class=ch>Swing Positions <span id=swc class=cb>0</span></div>
+<div id=swb><div class=es>No swing positions open</div></div>
+<div id=swp style="padding:6px 12px;font-size:13px;color:#888"></div>
+</div>
+</div>
 <div id="t-heat" class=tsec>
 <div class=cd>
 <div class=ch>Bot Activity Heatmap</div>
@@ -165,14 +172,14 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:-apple-system,'Segoe UI',sans-
 </div>
 </div>
 <nav id=nav>
-<button class="nb a" onclick="sTab('signal')" data-tab="signal"><span class=nb-ic>📡</span><span>Signal</span><span class=nd></span></button><button class=nb onclick="sTab('trades')" data-tab="trades"><span class=nb-ic>📈</span><span>Trades</span><span class=nd></span></button><button class=nb onclick="sTab('heat')" data-tab="heat"><span class=nb-ic>🌡️</span><span>Heat</span><span class=nd></span></button><button class=nb onclick="sTab('kill')" data-tab="kill"><span class=nb-ic>🔴</span><span>Kill</span><span class=nd></span></button>
+<button class="nb a" onclick="sTab('signal')" data-tab="signal"><span class=nb-ic>📡</span><span>Signal</span><span class=nd></span></button><button class=nb onclick="sTab('trades')" data-tab="trades"><span class=nb-ic>📈</span><span>Trades</span><span class=nd></span></button><button class=nb onclick="sTab('swing')" data-tab="swing"><span class=nb-ic>📊</span><span>Swing</span><span class=nd></span></button><button class=nb onclick="sTab('heat')" data-tab="heat"><span class=nb-ic>🌡️</span><span>Heat</span><span class=nd></span></button><button class=nb onclick="sTab('kill')" data-tab="kill"><span class=nb-ic>🔴</span><span>Kill</span><span class=nd></span></button>
 </nav>
 <div id=ht></div>
 <div id=tst></div>
 <script>'use strict';
 const $=id=>document.getElementById(id);
-const S={status:null,posts:[],trades:[],heat:{},playbook:{},perf:null};
-const D={s:1,p:1,t:1,h:1,f:1};
+const S={status:null,posts:[],trades:[],heat:{},playbook:{},perf:null,swings:null};
+const D={s:1,p:1,t:1,h:1,f:1,w:1};
 const C={ts:0};
 let curTab='signal',killOn=false,sdOpen=false,rafQ=false,ptr={y:0,on:false};
 const J='application/json',JH={'Content-Type':J};
@@ -203,6 +210,7 @@ if(jx(d.trades,S.trades)){S.trades=d.trades||[];D.t=1;}
 if(jx(d.heat,S.heat)){S.heat=d.heat||{};D.h=1;}
 if(jx(d.perf,S.perf)){S.perf=d.perf;D.f=1;}
 if(d.playbook)S.playbook=d.playbook;
+try{const sw=await pj('/api/swings');if(jx(sw,S.swings)){S.swings=sw;D.w=1;}}catch{}
 sched();
 }catch(e){console.warn('poll',e);}
 }
@@ -212,6 +220,7 @@ if(D.s){D.s=0;rStrike();rKill();}
 if(D.f){D.f=0;rScore();}
 if(D.p){D.p=0;rFeed();rPB();}
 if(D.t){D.t=0;rTrades();}
+if(D.w){D.w=0;rSwing();}
 if(D.h&&curTab==='heat'){D.h=0;rHeat();}
 }
 const ZL={COLD:'Quiet Zone',WARM:'Elevated',HOT:'Signal Detected',NUCLEAR:'NUCLEAR — IRAN'};
@@ -268,6 +277,24 @@ const cc=iran?'ci':cat.includes('TARIFF')?'ct':cat.includes('TRADE')?'cd':'';
 return`<div class="pc${iran?' ir':''}" onclick="this.querySelector('.pb').classList.toggle('tr')"><div class=ph><span class=pt>${esc(ago(p.date))}</span><span class="cat ${cc}">${esc(cat)}</span></div><div class="pb tr">${esc((p.text||p.title||'').slice(0,300))}</div></div>`;
 }).join('');
 }
+function rSwing(){
+const d=S.swings;if(!d||!d.positions)return;
+const ps=d.positions,sm=d.summary||{};
+$('swc').textContent=ps.length;
+if(!ps.length){$('swb').innerHTML='<div class=es>No swing positions open</div>';$('swp').textContent='';return;}
+const now=Date.now();
+$('swb').innerHTML=ps.map(p=>{
+const lg=p.direction==='BUY';
+const pnl=p.current_pnl_dollars||0,pp=p.current_pnl_pct||0;
+const tgt=p.entry_price*(1+p.target_pct/100),stp=p.entry_price*(1-p.stop_pct/100);
+let daysLeft=0;try{daysLeft=Math.max(0,Math.round((new Date(p.exit_by)-now)/86400000));}catch{}
+const barW=p.hold_days>0?Math.round(Math.max(5,Math.min(100,(1-daysLeft/p.hold_days)*100))):50;
+const thesis=(p.thesis||'').slice(0,80);
+return`<div class=tc><div class=th><span class="ttk">${esc(p.ticker)}</span><span class="dp ${lg?'lg':'sh'}">${p.direction} SWING</span></div><div class="pnl ${pnl>=0?'pp':'pn'}">${fmt$(pnl)} <small style="font-size:12px">(${fp(pp)})</small></div><div class=er>Entry <b>$${(p.entry_price||0).toFixed(2)}</b> → Now <b>$${(p.current_price||p.entry_price||0).toFixed(2)}</b></div><div class=er>Target: <b>$${tgt.toFixed(2)}</b> (+${p.target_pct}%) | Stop: <b>$${stp.toFixed(2)}</b> (-${p.stop_pct}%)</div><div style="margin:6px 0"><div style="background:#1a1a28;border-radius:4px;height:6px;overflow:hidden"><div style="width:${barW}%;height:100%;background:${pnl>=0?G:R};transition:width .3s"></div></div><div style="font-size:11px;color:#888;margin-top:2px">${daysLeft}d remaining of ${p.hold_days}d</div></div><div style="font-size:12px;color:#aaa;font-style:italic">${esc(thesis)}</div></div>`;
+}).join('');
+const tp=sm.total_pnl||0;
+$('swp').innerHTML=`Swing P&L: <b style="color:${tp>=0?G:R}">${fmt$(tp)}</b> | ${ps.length} position${ps.length>1?'s':''}`;
+}
 const TKS=['SPY','QQQ','GLD','UVIX','COIN','TSLA'];
 function rHeat(){
 const h=S.heat,now=Date.now(),bits=[];
@@ -316,7 +343,7 @@ else{toast('Error',3000);btn.disabled=false;btn.textContent='CLOSE POSITION';}
 }
 function sTab(tab){
 curTab=tab;
-['signal','trades','heat','kill'].forEach(k=>{const el=$('t-'+k);if(el)el.classList.toggle('a',k===tab);});
+['signal','trades','swing','heat','kill'].forEach(k=>{const el=$('t-'+k);if(el)el.classList.toggle('a',k===tab);});
 document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('a',b.dataset.tab===tab));
 if(tab==='heat'&&D.h){D.h=0;rHeat();}
 $('app').scrollTo({top:0,behavior:'smooth'});

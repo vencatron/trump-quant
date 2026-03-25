@@ -16,6 +16,7 @@ import requests
 # Add parent dir to path for imports
 sys.path.insert(0, os.path.dirname(__file__))
 from categorize import categorize_post
+from swing_engine import process_signal_for_swing, monitor_swing_positions, get_swing_summary
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 CORR_FILE = os.path.join(DATA_DIR, "correlation_results.json")
@@ -880,6 +881,19 @@ def main():
     if is_market_open():
         check_for_dips()
 
+    # Monitor swing positions (check targets/stops/time exits)
+    swing_closed = monitor_swing_positions()
+    if swing_closed:
+        total_swing_pnl = sum(c["pnl_dollars"] for c in swing_closed)
+        msg = f"📈 *TrumpQuant Swing Close*\n\n"
+        for c in swing_closed:
+            e = "✅" if c["pnl_dollars"] >= 0 else "❌"
+            msg += f"{e} *{c['ticker']}* {c['close_reason']}\n"
+            msg += f"   P&L: ${c['pnl_dollars']:+.2f} ({c['pnl_pct']:+.1f}%)\n"
+            msg += f"   Thesis: _{c['thesis']}_\n\n"
+        msg += f"*Swing P&L today: ${total_swing_pnl:+.2f}*"
+        send_telegram(msg)
+
     for post in posts:
         if post["id"] in seen:
             continue
@@ -928,6 +942,18 @@ def main():
                 print(f"FIRING ALERT: {post['text'][:80]}...")
                 send_telegram(alert)
                 fired += 1
+
+            # Also open swing position on high-conviction signals
+            if best_category in ("IRAN_ESCALATION", "TARIFFS", "FED_ATTACK", "WAR_ESCALATION", "TRADE_DEAL", "IRAN_DEESCALATION"):
+                swing_positions = process_signal_for_swing(best_category, post["text"])
+                if swing_positions:
+                    swing_msg = f"📊 *TrumpQuant Swing Position Opened*\n\n"
+                    for sp in swing_positions:
+                        swing_msg += f"🎯 *{sp['direction']} {sp['ticker']}* @ ${sp['entry_price']:.2f}\n"
+                        swing_msg += f"   Size: ${sp['position_value']:,.0f} | Target: +{sp['target_pct']}% in {sp['hold_days']}d\n"
+                        swing_msg += f"   Stop: -{sp['stop_pct']}% | Conviction: {sp['conviction']}\n"
+                        swing_msg += f"   📖 _{sp['thesis']}_\n\n"
+                    send_telegram(swing_msg)
 
             # Bot detector integration
             if best_signal["confidence"] in ("HIGH", "MEDIUM"):
