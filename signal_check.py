@@ -1358,5 +1358,11 @@ if __name__ == "__main__":
         close_eod_positions()
     elif args and args[0] == "monitor":
         monitor_open_positions()
+    elif args and args[0] == "weekend":
+        from weekend_war import run_friday_assessment
+        run_friday_assessment()
+    elif args and args[0] == "monday":
+        from weekend_war import monday_gap_detector
+        monday_gap_detector()
     else:
         main()

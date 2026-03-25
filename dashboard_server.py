@@ -377,6 +377,36 @@ async def get_heat():
     return result
 
 
+@app.get("/api/congress")
+async def get_congress():
+    """Congressional trading data for dashboard."""
+    f = DATA_DIR / "congress_trades.json"
+    signal_f = DATA_DIR / "congress_signal.json"
+    result = {"trades": [], "signal": "NEUTRAL", "confidence": "LOW", "evidence": ""}
+    if f.exists():
+        try:
+            with open(f) as fp:
+                data = json.load(fp)
+            if isinstance(data, dict):
+                result["trades"] = data.get("trades", [])[:50]
+            elif isinstance(data, list):
+                result["trades"] = data[:50]
+        except (json.JSONDecodeError, ValueError):
+            pass
+    if signal_f.exists():
+        try:
+            with open(signal_f) as fp:
+                sig = json.load(fp)
+            result["signal"] = sig.get("signal", "NEUTRAL")
+            result["confidence"] = sig.get("confidence", "LOW")
+            result["evidence"] = sig.get("evidence", "")
+            result["war_trades"] = sig.get("war_trades", [])[:20]
+            result["high_value_count"] = sig.get("high_value_count", 0)
+        except (json.JSONDecodeError, ValueError):
+            pass
+    return result
+
+
 @app.get("/api/iran")
 async def get_iran_posts():
     """Last 20 Iran-related posts with market impact."""

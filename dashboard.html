@@ -154,6 +154,12 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:-apple-system,'Segoe UI',sans-
 <div id=swp style="padding:6px 12px;font-size:13px;color:#888"></div>
 </div>
 </div>
+<div id="t-congress" class=tsec>
+<div class=cd>
+<div class=ch>🏛️ Congress Tracker <span id="congress-signal-badge" class=cb style="font-size:11px">—</span></div>
+<div id="congress-body" style="padding:8px;font-size:13px;color:#999">Loading congressional trades...</div>
+</div>
+</div>
 <div id="t-heat" class=tsec>
 <div class=cd>
 <div class=ch>Bot Activity Heatmap</div>
@@ -172,13 +178,13 @@ body{background:#0a0a0f;color:#e0e0e0;font-family:-apple-system,'Segoe UI',sans-
 </div>
 </div>
 <nav id=nav>
-<button class="nb a" onclick="sTab('signal')" data-tab="signal"><span class=nb-ic>📡</span><span>Signal</span><span class=nd></span></button><button class=nb onclick="sTab('trades')" data-tab="trades"><span class=nb-ic>📈</span><span>Trades</span><span class=nd></span></button><button class=nb onclick="sTab('swing')" data-tab="swing"><span class=nb-ic>📊</span><span>Swing</span><span class=nd></span></button><button class=nb onclick="sTab('heat')" data-tab="heat"><span class=nb-ic>🌡️</span><span>Heat</span><span class=nd></span></button><button class=nb onclick="sTab('kill')" data-tab="kill"><span class=nb-ic>🔴</span><span>Kill</span><span class=nd></span></button>
+<button class="nb a" onclick="sTab('signal')" data-tab="signal"><span class=nb-ic>📡</span><span>Signal</span><span class=nd></span></button><button class=nb onclick="sTab('trades')" data-tab="trades"><span class=nb-ic>📈</span><span>Trades</span><span class=nd></span></button><button class=nb onclick="sTab('swing')" data-tab="swing"><span class=nb-ic>📊</span><span>Swing</span><span class=nd></span></button><button class=nb onclick="sTab('congress')" data-tab="congress"><span class=nb-ic>🏛️</span><span>Congress</span><span class=nd></span></button><button class=nb onclick="sTab('heat')" data-tab="heat"><span class=nb-ic>🌡️</span><span>Heat</span><span class=nd></span></button><button class=nb onclick="sTab('kill')" data-tab="kill"><span class=nb-ic>🔴</span><span>Kill</span><span class=nd></span></button>
 </nav>
 <div id=ht></div>
 <div id=tst></div>
 <script>'use strict';
 const $=id=>document.getElementById(id);
-const S={status:null,posts:[],trades:[],heat:{},playbook:{},perf:null,swings:null};
+const S={status:null,posts:[],trades:[],heat:{},playbook:{},perf:null,swings:null,congress:null};
 const D={s:1,p:1,t:1,h:1,f:1,w:1};
 const C={ts:0};
 let curTab='signal',killOn=false,sdOpen=false,rafQ=false,ptr={y:0,on:false};
@@ -211,6 +217,7 @@ if(jx(d.heat,S.heat)){S.heat=d.heat||{};D.h=1;}
 if(jx(d.perf,S.perf)){S.perf=d.perf;D.f=1;}
 if(d.playbook)S.playbook=d.playbook;
 try{const sw=await pj('/api/swings');if(jx(sw,S.swings)){S.swings=sw;D.w=1;}}catch{}
+try{const cg=await pj('/api/congress');if(jx(cg,S.congress)){S.congress=cg;D.cg=1;}}catch{}
 sched();
 }catch(e){console.warn('poll',e);}
 }
@@ -221,6 +228,7 @@ if(D.f){D.f=0;rScore();}
 if(D.p){D.p=0;rFeed();rPB();}
 if(D.t){D.t=0;rTrades();}
 if(D.w){D.w=0;rSwing();}
+if(D.cg){D.cg=0;rCongress();}
 if(D.h&&curTab==='heat'){D.h=0;rHeat();}
 }
 const ZL={COLD:'Quiet Zone',WARM:'Elevated',HOT:'Signal Detected',NUCLEAR:'NUCLEAR — IRAN'};
@@ -295,6 +303,24 @@ return`<div class=tc><div class=th><span class="ttk">${esc(p.ticker)}</span><spa
 const tp=sm.total_pnl||0;
 $('swp').innerHTML=`Swing P&L: <b style="color:${tp>=0?G:R}">${fmt$(tp)}</b> | ${ps.length} position${ps.length>1?'s':''}`;
 }
+function rCongress(){
+const d=S.congress;if(!d)return;
+const badge=$('congress-signal-badge'),body=$('congress-body');
+const sig=d.signal||'NEUTRAL',conf=d.confidence||'LOW';
+badge.textContent=sig;badge.style.background=sig==='BULLISH'?G:sig==='BEARISH'?R:'#555';
+const wt=d.war_trades||[];
+if(!wt.length){body.innerHTML='<div class=es>No defense/energy trades found in recent disclosures</div>';return;}
+let html='<div style="font-size:12px;color:#aaa;margin-bottom:8px">Signal: <b style="color:'+(sig==='BULLISH'?G:sig==='BEARISH'?R:'#aaa')+'">'+sig+'</b> ('+conf+') — '+(d.evidence||'')+'</div>';
+html+='<div style="max-height:300px;overflow-y:auto">';
+wt.slice(0,15).forEach(t=>{
+const isBuy=((t.transaction||'').toLowerCase().includes('purchase')||(t.transaction||'').toLowerCase().includes('buy'));
+const hv=t.is_high_value_member?' ⭐':'';
+html+='<div style="padding:6px 0;border-bottom:1px solid #1a1a28"><span style="color:'+(isBuy?G:R)+'">●</span> <b>'+esc(t.politician||'?')+'</b>'+hv+' <span style="color:#888">'+esc(t.party||'')+'</span><br>';
+html+='<span style="margin-left:14px">'+esc(t.transaction||'')+' <b>'+esc(t.ticker||'')+'</b> ('+esc(t.amount||'?')+')</span> <span style="color:#666;font-size:11px">'+esc(t.date||'')+'</span></div>';
+});
+html+='</div>';
+body.innerHTML=html;
+}
 const TKS=['SPY','QQQ','GLD','UVIX','COIN','TSLA'];
 function rHeat(){
 const h=S.heat,now=Date.now(),bits=[];
@@ -343,7 +369,7 @@ else{toast('Error',3000);btn.disabled=false;btn.textContent='CLOSE POSITION';}
 }
 function sTab(tab){
 curTab=tab;
-['signal','trades','swing','heat','kill'].forEach(k=>{const el=$('t-'+k);if(el)el.classList.toggle('a',k===tab);});
+['signal','trades','swing','congress','heat','kill'].forEach(k=>{const el=$('t-'+k);if(el)el.classList.toggle('a',k===tab);});
 document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('a',b.dataset.tab===tab));
 if(tab==='heat'&&D.h){D.h=0;rHeat();}
 $('app').scrollTo({top:0,behavior:'smooth'});
