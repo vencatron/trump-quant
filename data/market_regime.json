@@ -1,11 +1,11 @@
 {
   "regime": "HIGH_SENSITIVITY",
-  "vix": 26.15,
-  "avg_daily_range_pct": 1.182,
+  "vix": 26.95,
+  "avg_daily_range_pct": 1.165,
   "post_market_correlation_pct": 50,
   "recommended_position_multiplier": 1.5,
   "notes": "VIX elevated \u2014 maximum signal sensitivity",
-  "updated": "2026-03-24T04:24:48.505876+00:00",
+  "updated": "2026-03-25T02:30:14.594301+00:00",
   "components": {
     "vix_regime": "HIGH_SENSITIVITY",
     "range_regime": "MEDIUM_SENSITIVITY",

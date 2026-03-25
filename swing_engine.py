@@ -5,18 +5,22 @@ Runs independently from scalp engine. Larger size, wider stops.
 """
 
 import json
+import logging
 import os
 import requests
 import time
 from datetime import datetime, timezone, timedelta
 
+from alpaca_utils import get_headers, get_price, submit_order, close_position as alpaca_close_position
+
+logger = logging.getLogger("trumpquant.swing_engine")
+
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 ALPACA_URL = "https://paper-api.alpaca.markets"
-ALPACA_KEY = os.environ.get("ALPACA_API_KEY", "PKQ2P7KLMAJH5E3IQVKYQPTBOB")
-ALPACA_SECRET = os.environ.get("ALPACA_SECRET_KEY", "A58boqhagLVQH7tKfz7MafU8axJx6HGc9GbR4VgUFhrT")
 
 SWING_POSITIONS_FILE = os.path.join(DATA_DIR, "swing_positions.json")
 SWING_LOG_FILE = os.path.join(DATA_DIR, "swing_log.jsonl")
+SWING_TRAILING_FILE = os.path.join(DATA_DIR, "swing_trailing_stops.json")
 
 MAX_SWING_POSITIONS = 2
 SWING_POSITION_SIZE = 5000  # $5k per swing trade
@@ -50,7 +54,8 @@ SWING_SIGNALS = {
 }
 
 def alpaca_headers():
-    return {"APCA-API-KEY-ID": ALPACA_KEY, "APCA-API-SECRET-KEY": ALPACA_SECRET}
+    """Return Alpaca API headers. Delegates to shared alpaca_utils."""
+    return get_headers()
 
 def load_swing_positions():
     if os.path.exists(SWING_POSITIONS_FILE):
@@ -66,17 +71,22 @@ def save_swing_positions(positions):
         json.dump(positions, f, indent=2)
 
 def get_current_price(ticker):
-    try:
-        url = f"https://data.alpaca.markets/v2/stocks/{ticker}/quotes/latest"
-        r = requests.get(url, headers=alpaca_headers(), timeout=8)
-        if r.status_code == 200:
-            q = r.json().get("quote", {})
-            mid = (q.get("ap", 0) + q.get("bp", 0)) / 2
-            if mid > 0:
-                return round(mid, 2)
-    except Exception:
-        pass
-    return None
+    """Get latest price for a ticker. Delegates to shared alpaca_utils."""
+    return get_price(ticker)
+
+def load_swing_trailing_stops():
+    if os.path.exists(SWING_TRAILING_FILE):
+        try:
+            with open(SWING_TRAILING_FILE) as f:
+                return json.load(f)
+        except:
+            pass
+    return {}
+
+def save_swing_trailing_stops(stops):
+    with open(SWING_TRAILING_FILE, 'w') as f:
+        json.dump(stops, f, indent=2)
+
 
 def open_swing_position(ticker, direction, signal_category, thesis, target_pct, stop_pct, hold_days, conviction):
     """Open a new swing position."""
@@ -84,33 +94,27 @@ def open_swing_position(ticker, direction, signal_category, thesis, target_pct, 
 
     # Check limits
     if len(positions) >= MAX_SWING_POSITIONS:
-        print(f"  [SWING] Max positions reached ({MAX_SWING_POSITIONS}) — skipping {ticker}")
+        logger.info("[SWING] Max positions reached ({MAX_SWING_POSITIONS}) — skipping {ticker}")
         return None
 
     # No duplicate tickers
     held = {p["ticker"] for p in positions}
     if ticker in held:
-        print(f"  [SWING] Already holding {ticker} — skipping")
+        logger.info("[SWING] Already holding {ticker} — skipping")
         return None
 
     price = get_current_price(ticker)
     if not price:
-        print(f"  [SWING] Cannot get price for {ticker}")
+        logger.info("[SWING] Cannot get price for {ticker}")
         return None
 
     shares = max(1, int(SWING_POSITION_SIZE / price))
     side = "buy" if direction == "BUY" else "sell"
 
-    # Submit order
-    try:
-        payload = {"symbol": ticker, "qty": shares, "side": side, "type": "market", "time_in_force": "day"}
-        r = requests.post(f"{ALPACA_URL}/v2/orders", json=payload, headers=alpaca_headers(), timeout=10)
-        if r.status_code not in (200, 201):
-            print(f"  [SWING] Order failed: {r.text[:200]}")
-            return None
-        order = r.json()
-    except Exception as e:
-        print(f"  [SWING] Order error: {e}")
+    # Submit order via shared utility with retry logic
+    order = submit_order(ticker, shares, side)
+    if not order:
+        logger.warning("[SWING] Order failed for %s %s %s", side, shares, ticker)
         return None
 
     exit_date = (datetime.now(timezone.utc) + timedelta(days=hold_days)).isoformat()
@@ -136,8 +140,8 @@ def open_swing_position(ticker, direction, signal_category, thesis, target_pct, 
     positions.append(position)
     save_swing_positions(positions)
 
-    print(f"  [SWING] Opened: {direction} {shares}x {ticker} @ ${price:.2f} | target +{target_pct}% | hold {hold_days}d")
-    print(f"  [SWING] Thesis: {thesis}")
+    logger.info("[SWING] Opened: {direction} {shares}x {ticker} @ ${price:.2f} | target +{target_pct}% | hold {hold_days}d")
+    logger.info("[SWING] Thesis: {thesis}")
 
     # Log
     with open(SWING_LOG_FILE, "a") as f:
@@ -170,41 +174,91 @@ def monitor_swing_positions():
 
         pnl_dollars = (pnl_pct / 100) * pos["position_value"]
 
+        # Load trailing stops state
+        swing_trailing = load_swing_trailing_stops()
+        trail_state = swing_trailing.get(ticker, {'high_pct': 0, 'trail_stop_pct': None, 'partial_taken': False})
+
+        # Update high water mark
+        if pnl_pct > trail_state.get('high_pct', 0):
+            trail_state['high_pct'] = pnl_pct
+
+        high_pct = trail_state['high_pct']
+
+        # Swing trailing stop tiers (wider than scalp):
+        # Tier 1: Up +2% → trail at breakeven (0%)
+        # Tier 2: Up +3% → trail at 1% below high + partial exit 50%
+        # Tier 3: Up +4% → trail at 1.5% below high
+        if high_pct >= 4.0:
+            trail_state['trail_stop_pct'] = high_pct - 1.5
+        elif high_pct >= 3.0:
+            trail_state['trail_stop_pct'] = high_pct - 1.0
+            # Partial exit: close 50% at +3% if not already done
+            if not trail_state.get('partial_taken', False):
+                total_qty = pos.get('shares', 0)
+                partial_qty = max(1, total_qty // 2)
+                print(f'  [SWING] PARTIAL EXIT: Closing {partial_qty}/{total_qty} of {ticker} at +{pnl_pct:.2f}%')
+                try:
+                    side = 'sell' if pos['direction'] == 'BUY' else 'buy'
+                    order = submit_order(ticker, partial_qty, side)
+                    if order:
+                        trail_state['partial_taken'] = True
+                        pos['shares'] = total_qty - partial_qty
+                        pos['position_value'] = pos['entry_price'] * pos['shares']
+                except Exception as e:
+                    logger.error("[SWING] Partial exit error: %s", e)
+        elif high_pct >= 2.0:
+            trail_state['trail_stop_pct'] = 0  # breakeven
+
+        # Save trailing stop state
+        swing_trailing[ticker] = trail_state
+        save_swing_trailing_stops(swing_trailing)
+
         # Check exit conditions
         should_close = False
         close_reason = ""
 
+        # Rule 1: Target hit (hard ceiling)
         if pnl_pct >= pos["target_pct"]:
             should_close = True
             close_reason = f"TARGET_HIT (+{pnl_pct:.2f}%)"
+
+        # Rule 2: Trailing stop hit
+        elif trail_state.get('trail_stop_pct') is not None and pnl_pct <= trail_state['trail_stop_pct']:
+            should_close = True
+            close_reason = f'TRAILING_STOP ({pnl_pct:.2f}%, trail at {trail_state["trail_stop_pct"]:.1f}%)'
+
+        # Rule 3: Hard stop loss
         elif pnl_pct <= -pos["stop_pct"]:
             should_close = True
             close_reason = f"STOP_LOSS ({pnl_pct:.2f}%)"
+
+        # Rule 4: Time exit
         else:
-            # Check time exit
             exit_dt = datetime.fromisoformat(pos["exit_by"].replace("Z", "+00:00"))
             if now >= exit_dt:
                 should_close = True
                 close_reason = f"TIME_EXIT ({pos['hold_days']}d hold, {pnl_pct:+.2f}%)"
 
         if should_close:
-            # Close the position
-            try:
-                r = requests.delete(f"{ALPACA_URL}/v2/positions/{ticker}", headers=alpaca_headers(), timeout=10)
-                status = "CLOSED" if r.status_code in (200, 204) else "CLOSE_FAILED"
-            except Exception:
-                status = "CLOSE_FAILED"
+            # Close the position via shared utility
+            success = alpaca_close_position(ticker)
+            status = "CLOSED" if success else "CLOSE_FAILED"
 
             result = {**pos, "close_reason": close_reason, "exit_price": current,
                      "pnl_pct": pnl_pct, "pnl_dollars": pnl_dollars, "status": status,
                      "closed_at": now.isoformat()}
             closed.append(result)
 
+            # Clean up trailing stop state
+            if ticker in swing_trailing:
+                del swing_trailing[ticker]
+                save_swing_trailing_stops(swing_trailing)
+
             with open(SWING_LOG_FILE, "a") as f:
                 f.write(json.dumps({**result, "event": "CLOSE"}) + "\n")
 
             emoji = "+" if pnl_dollars >= 0 else "-"
-            print(f"  [SWING] {emoji} Closed {ticker}: {close_reason} | P&L: ${pnl_dollars:+.2f}")
+            logger.info("[SWING] {emoji} Closed {ticker}: {close_reason} | P&L: ${pnl_dollars:+.2f}")
         else:
             pos["current_price"] = current
             pos["current_pnl_pct"] = pnl_pct

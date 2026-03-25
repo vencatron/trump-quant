@@ -66,8 +66,12 @@ def record_outcome(trade_result: dict):
 
     entry_price = trade_result.get("entry_price", 0)
     exit_price = trade_result.get("exit_price", 0)
-    if entry_price and entry_price > 0:
+    if entry_price and entry_price > 0 and exit_price and exit_price > 0:
         pnl_pct = ((exit_price - entry_price) / entry_price) * 100
+        actual_move_pct = pnl_pct
+    elif not exit_price and trade_result.get('pnl') is not None and entry_price and entry_price > 0:
+        # If pnl is passed directly (dollar P&L), compute pct from it
+        pnl_pct = (trade_result['pnl'] / (entry_price * trade_result.get('shares', 1))) * 100
         actual_move_pct = pnl_pct
     else:
         pnl_pct = 0

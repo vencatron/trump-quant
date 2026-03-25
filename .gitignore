@@ -26,6 +26,10 @@ data/monitor_seen.json
 data/bot_activity_cache.json
 data/daily_risk_state.json
 data/rss_seen_ids.json
+data/swing_trailing_stops.json
+data/vix_cache.json
+data/signal_cooldowns.json
+data/daily_trade_count.json
 
 # Keep these (trade logs, correlation results)
 !data/bot_trades.json

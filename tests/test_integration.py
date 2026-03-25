@@ -51,7 +51,8 @@ class TestFullFlow:
              patch("botdetector.bot_detector.TradeExecutor") as MockExecutor, \
              patch("botdetector.bot_detector.RiskManager") as MockRisk, \
              patch("botdetector.bot_detector.Notifier") as MockNotifier, \
-             patch("botdetector.bot_detector.log_signal"):
+             patch("botdetector.bot_detector.log_signal"), \
+             patch("asyncio.create_task"):
 
             mock_risk = MagicMock()
             mock_risk.check_can_trade.return_value = (True, "OK")

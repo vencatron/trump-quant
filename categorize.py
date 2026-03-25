@@ -103,6 +103,17 @@ def categorize_post(text: str) -> dict:
     if mentioned_tickers and "SPECIFIC_TICKER" not in categories:
         categories.append("SPECIFIC_TICKER")
 
+    # Post-process IRAN_ESCALATION: require military words AND no peace words
+    MILITARY_WORDS = ['bomb', 'strike', 'airstrike', 'troops', 'military operation', 'attack', 'explosion', 'missiles', 'bombing', 'hostilities']
+    PEACE_BLOCKERS = ['deal', 'peace', 'postpone', 'ceasefire', 'negotiations', 'talks', 'resolve', 'wind down', 'agreement', 'surrender', 'winding down']
+    if 'IRAN_ESCALATION' in categories:
+        has_military = any(w in text_lower for w in MILITARY_WORDS)
+        has_peace = any(w in text_lower for w in PEACE_BLOCKERS)
+        if has_peace or not has_military:
+            categories.remove('IRAN_ESCALATION')
+            if 'IRAN_DEESCALATION' not in categories:
+                categories.append('IRAN_DEESCALATION')
+
     # Sentiment score: simple positive/negative word count
     positive_words = [
         "great", "best", "winning", "love", "incredible", "tremendous",

@@ -23,9 +23,6 @@ from sse_starlette.sse import EventSourceResponse
 app = FastAPI(title="TrumpQuant Dashboard v2")
 app.add_middleware(GZipMiddleware, minimum_size=500)
 
-from fastapi.middleware.gzip import GZipMiddleware
-app.add_middleware(GZipMiddleware, minimum_size=1000)
-
 BASE_DIR = Path(__file__).parent
 DATA_DIR = BASE_DIR / "data"
 HTML_FILE = BASE_DIR / "dashboard.html"
@@ -37,10 +34,14 @@ MARKET_CACHE_TTL = 30
 
 WATCHLIST = ["SPY", "QQQ", "GLD", "UVIX", "COIN", "TSLA"]
 
-# Alpaca credentials (paper)
-ALPACA_KEY = os.environ.get("ALPACA_API_KEY", "PKQ2P7KLMAJH5E3IQVKYQPTBOB")
-ALPACA_SECRET = os.environ.get("ALPACA_SECRET_KEY", "A58boqhagLVQH7tKfz7MafU8axJx6HGc9GbR4VgUFhrT")
+# Alpaca credentials — from environment only (no hardcoded fallbacks)
+ALPACA_KEY = os.environ.get("ALPACA_API_KEY", "")
+ALPACA_SECRET = os.environ.get("ALPACA_SECRET_KEY", "")
 ALPACA_URL = "https://paper-api.alpaca.markets"
+
+if not ALPACA_KEY or not ALPACA_SECRET:
+    import logging
+    logging.warning("WARNING: Alpaca API keys not set. Dashboard trading will fail.")
 
 INVERSE_MAP = {"QQQ": "SQQQ", "SPY": "SPXU"}
 POSITION_SIZE = 2500
@@ -159,6 +160,24 @@ def alpaca_headers():
     }
 
 
+_startup_time = time.time()
+
+
+def _get_alpaca_price(ticker: str) -> float | None:
+    """Synchronous price fetch for non-async contexts."""
+    try:
+        url = f"https://data.alpaca.markets/v2/stocks/{ticker}/quotes/latest"
+        resp = requests.get(url, headers=alpaca_headers(), timeout=8)
+        if resp.status_code == 200:
+            q = resp.json().get("quote", {})
+            mid = (q.get("ap", 0) + q.get("bp", 0)) / 2
+            if mid > 0:
+                return round(mid, 2)
+    except Exception:
+        pass
+    return None
+
+
 async def _get_alpaca_price_async(session: aiohttp.ClientSession, ticker: str) -> float | None:
     """Async price fetch — non-blocking."""
     try:
@@ -195,6 +214,24 @@ async def _fetch_all_prices() -> dict:
 
 
 # --- API Endpoints ---
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for Railway/monitoring."""
+    uptime = time.time() - _startup_time
+    alpaca_ok = False
+    try:
+        resp = requests.get(f"{ALPACA_URL}/v2/account", headers=alpaca_headers(), timeout=5)
+        alpaca_ok = resp.status_code == 200
+    except Exception:
+        pass
+    return {
+        "status": "ok",
+        "uptime": round(uptime, 1),
+        "alpaca_connected": alpaca_ok,
+        "paper_mode": True,
+    }
+
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_dashboard():
@@ -532,13 +569,21 @@ class TradeRequest(BaseModel):
 
 @app.post("/api/execute_trade")
 async def execute_trade(req: TradeRequest):
-    """Manual trade execution from dashboard."""
+    """Manual trade execution from dashboard with input validation."""
     if _kill_switch_active():
         return JSONResponse(status_code=403, content={"error": "Kill switch is active"})
 
-    ticker = req.ticker
-    direction = req.direction.upper()
-    signal_cat = req.signal
+    ticker = req.ticker.upper().strip()
+    direction = req.direction.upper().strip()
+    signal_cat = req.signal.strip()
+
+    # Input validation
+    if not ticker or not ticker.isalpha() or len(ticker) > 10:
+        return JSONResponse(status_code=400, content={"error": "Invalid ticker symbol"})
+    if direction not in ("BUY", "SELL", "SHORT", "LONG"):
+        return JSONResponse(status_code=400, content={"error": "Invalid direction. Use BUY, SELL, SHORT, or LONG"})
+    if len(signal_cat) > 50:
+        return JSONResponse(status_code=400, content={"error": "Invalid signal category"})
 
     # Determine actual ticker and side
     actual_ticker = ticker
@@ -650,8 +695,33 @@ async def stream(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
+    import signal as sig_module
+
     print("=" * 60)
     print("  TrumpQuant v2 Dashboard — http://localhost:7799")
     print("=" * 60)
+
+    # Startup validation: check Alpaca connection
+    if ALPACA_KEY and ALPACA_SECRET:
+        try:
+            resp = requests.get(f"{ALPACA_URL}/v2/account", headers=alpaca_headers(), timeout=10)
+            if resp.status_code == 200:
+                acct = resp.json()
+                print(f"  ✅ Alpaca connected — equity: ${acct.get('equity', '?')}")
+            else:
+                print(f"  ⚠️  Alpaca auth failed: HTTP {resp.status_code}")
+        except Exception as e:
+            print(f"  ⚠️  Alpaca connection error: {e}")
+    else:
+        print("  ⚠️  No Alpaca API keys set — trading disabled")
+
+    # Graceful shutdown handling
+    def handle_shutdown(signum, frame):
+        print("\n  Shutting down gracefully...")
+        raise SystemExit(0)
+
+    sig_module.signal(sig_module.SIGTERM, handle_shutdown)
+    sig_module.signal(sig_module.SIGINT, handle_shutdown)
+
     port = int(os.environ.get("PORT", 7799))
     uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")

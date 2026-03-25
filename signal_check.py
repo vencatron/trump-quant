@@ -16,6 +16,7 @@ import requests
 # Add parent dir to path for imports
 sys.path.insert(0, os.path.dirname(__file__))
 from categorize import categorize_post
+from learning_engine import record_outcome
 from swing_engine import process_signal_for_swing, monitor_swing_positions, get_swing_summary
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
@@ -26,7 +27,14 @@ BOT_CACHE_FILE = os.path.join(DATA_DIR, "bot_activity_cache.json")
 TRADED_TODAY_FILE = os.path.join(DATA_DIR, "traded_today.json")
 LEARNING_LOG_FILE = os.path.join(DATA_DIR, "learning_log.jsonl")
 EOD_LOG_FILE = os.path.join(DATA_DIR, "eod_log.json")
+VIX_CACHE_FILE = os.path.join(DATA_DIR, 'vix_cache.json')
+VIX_REGIME_THRESHOLD = 25  # UVIX only useful when VIX < 25
+SIGNAL_COOLDOWN_FILE = os.path.join(DATA_DIR, 'signal_cooldowns.json')
+DAILY_TRADE_COUNT_FILE = os.path.join(DATA_DIR, 'daily_trade_count.json')
+SIGNAL_COOLDOWN_HOURS = 4
+MAX_TRADES_PER_DAY = 6
 MAX_TRADES_PER_RUN = 2
+DRY_RUN = '--dry-run' in sys.argv
 MAX_DAILY_EXPOSURE = 10000  # $10k total portfolio cap
 MAX_PER_TICKER_DAILY = 2500  # $2,500 hard cap per ticker per day
 MAX_POSITIONS = 4  # max 4 concurrent positions
@@ -40,10 +48,13 @@ SIGNAL_CATEGORIES = {
     "WAR_ESCALATION", "MUSK_TRUMP",
 }
 
-# Alpaca paper trading credentials
-ALPACA_KEY = os.environ.get("ALPACA_API_KEY", "PKQ2P7KLMAJH5E3IQVKYQPTBOB")
-ALPACA_SECRET = os.environ.get("ALPACA_SECRET_KEY", "A58boqhagLVQH7tKfz7MafU8axJx6HGc9GbR4VgUFhrT")
+# Alpaca paper trading credentials — from environment only
+ALPACA_KEY = os.environ.get("ALPACA_API_KEY", "")
+ALPACA_SECRET = os.environ.get("ALPACA_SECRET_KEY", "")
 ALPACA_URL = "https://paper-api.alpaca.markets"
+
+if not ALPACA_KEY or not ALPACA_SECRET:
+    print("WARNING: Alpaca API keys not set in environment variables. Trading will fail.")
 
 # Inverse ETF mapping for SHORT signals
 INVERSE_MAP = {
@@ -57,26 +68,29 @@ POSITION_SIZE = 2500  # max dollars per trade
 
 # Per-ticker profit/stop targets for monitor_open_positions
 SCALP_TARGETS = {
-    "UVIX":  {"take_profit": 1.5, "stop_loss": -0.5},
-    "SQQQ":  {"take_profit": 1.5, "stop_loss": -0.5},
-    "SPXU":  {"take_profit": 1.5, "stop_loss": -0.5},
-    "SPY":   {"take_profit": 0.8, "stop_loss": -0.5},
-    "QQQ":   {"take_profit": 0.8, "stop_loss": -0.5},
-    "XLE":   {"take_profit": 2.0, "stop_loss": -0.8},
-    "USO":   {"take_profit": 2.5, "stop_loss": -1.0},
-    "LMT":   {"take_profit": 2.0, "stop_loss": -0.8},
-    "TSLA":  {"take_profit": 2.5, "stop_loss": -1.5},
-    "NVDA":  {"take_profit": 2.0, "stop_loss": -1.5},
-    "COIN":  {"take_profit": 3.0, "stop_loss": -2.0},
-    "DEFAULT": {"take_profit": 1.0, "stop_loss": -0.5},
+    'UVIX':  {'take_profit': 1.5, 'stop_loss': -0.5, 'trail_activation_pct': 0.5, 'trail_distance_pct': 0.3},
+    'SQQQ':  {'take_profit': 1.5, 'stop_loss': -0.5, 'trail_activation_pct': 0.5, 'trail_distance_pct': 0.3},
+    'SPXU':  {'take_profit': 1.5, 'stop_loss': -0.5, 'trail_activation_pct': 0.5, 'trail_distance_pct': 0.3},
+    'SPY':   {'take_profit': 0.8, 'stop_loss': -0.5, 'trail_activation_pct': 0.3, 'trail_distance_pct': 0.2},
+    'QQQ':   {'take_profit': 0.8, 'stop_loss': -0.5, 'trail_activation_pct': 0.3, 'trail_distance_pct': 0.2},
+    'XLE':   {'take_profit': 2.0, 'stop_loss': -0.8, 'trail_activation_pct': 0.5, 'trail_distance_pct': 0.3},
+    'USO':   {'take_profit': 2.5, 'stop_loss': -1.0, 'trail_activation_pct': 0.5, 'trail_distance_pct': 0.3},
+    'LMT':   {'take_profit': 2.0, 'stop_loss': -0.8, 'trail_activation_pct': 0.5, 'trail_distance_pct': 0.3},
+    'TSLA':  {'take_profit': 2.5, 'stop_loss': -1.5, 'trail_activation_pct': 0.5, 'trail_distance_pct': 0.3},
+    'NVDA':  {'take_profit': 2.0, 'stop_loss': -1.5, 'trail_activation_pct': 0.5, 'trail_distance_pct': 0.3},
+    'COIN':  {'take_profit': 3.0, 'stop_loss': -2.0, 'trail_activation_pct': 0.5, 'trail_distance_pct': 0.3},
+    'GLD':   {'take_profit': 2.0, 'stop_loss': -1.0, 'trail_activation_pct': 0.5, 'trail_distance_pct': 0.3},
+    'DEFAULT': {'take_profit': 1.0, 'stop_loss': -0.5, 'trail_activation_pct': 0.3, 'trail_distance_pct': 0.2},
 }
+
+TRAILING_STOPS_FILE = os.path.join(DATA_DIR, 'trailing_stops.json')
 
 # Watchlist for all tradeable tickers
 WATCHLIST = ["UVIX", "SQQQ", "SPXU", "SPY", "QQQ", "GLD", "COIN", "XLE", "USO", "LMT", "TSLA", "XLB", "NVDA"]
 
 # Fallback routing when primary ticker is already held
 FALLBACK_MAP = {
-    "UVIX": "SQQQ",
+    "UVIX": "GLD",
     "SQQQ": "SPXU",
     "SPXU": None,   # no further fallback
     "GLD": None,
@@ -91,8 +105,9 @@ MAX_CONCURRENT_POSITIONS = 2  # max 2 concurrent positions across all tickers
 TOP_SIGNALS = {
     # Iran war signals — highest volatility, biggest moves
     "IRAN_ESCALATION": [
-        {"ticker": "UVIX", "direction": "BUY",  "action": "BUY",  "target_pct": 2.0, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 8.5,  "window": "same day", "rationale": "VIX spikes on war"},
-        {"ticker": "SQQQ", "direction": "BUY",  "action": "BUY",  "target_pct": 2.0, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 2.1,  "window": "same day", "rationale": "QQQ drops on escalation"},
+        {"ticker": "GLD",  "direction": "BUY",  "action": "BUY",  "target_pct": 2.0, "stop_pct": 1.0, "confidence": "HIGH", "avg_return": 2.3,  "window": "1-3 days", "rationale": "Gold primary safe haven — 95% win rate on 35k datapoints", "regime_aware": False},
+        {"ticker": "UVIX", "direction": "BUY",  "action": "BUY",  "target_pct": 2.0, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 8.5,  "window": "same day", "rationale": "VIX spikes on war", "regime_aware": True},
+        {"ticker": "SQQQ", "direction": "BUY",  "action": "BUY",  "target_pct": 2.0, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 2.1,  "window": "same day", "rationale": "QQQ drops on escalation", "regime_aware": True},
         {"ticker": "XLE",  "direction": "BUY",  "action": "BUY",  "target_pct": 3.0, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 3.5,  "window": "same day", "rationale": "Energy pumps on Hormuz risk"},
         {"ticker": "LMT",  "direction": "BUY",  "action": "BUY",  "target_pct": 2.5, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 2.8,  "window": "same day", "rationale": "Defense contracts on war"},
     ],
@@ -133,6 +148,20 @@ TOP_SIGNALS = {
         {"ticker": "TSLA", "direction": "BUY",  "action": "BUY",  "target_pct": 3.0, "stop_pct": 1.0, "confidence": "MEDIUM","avg_return": 3.5,  "window": "same day", "rationale": "Musk/Trump correlation play"},
     ],
 }
+
+
+def load_trailing_stops():
+    if os.path.exists(TRAILING_STOPS_FILE):
+        try:
+            with open(TRAILING_STOPS_FILE) as f:
+                return json.load(f)
+        except:
+            pass
+    return {}
+
+def save_trailing_stops(stops):
+    with open(TRAILING_STOPS_FILE, "w") as f:
+        json.dump(stops, f, indent=2)
 
 
 def load_seen():
@@ -203,6 +232,61 @@ def record_traded_today(post_id, ticker):
         "timestamp": datetime.now(timezone.utc).isoformat(),
     })
     save_traded_today(data)
+
+
+def load_signal_cooldowns():
+    if os.path.exists(SIGNAL_COOLDOWN_FILE):
+        try:
+            with open(SIGNAL_COOLDOWN_FILE) as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+
+def save_signal_cooldowns(cooldowns):
+    with open(SIGNAL_COOLDOWN_FILE, 'w') as f:
+        json.dump(cooldowns, f, indent=2)
+
+
+def is_on_cooldown(category, ticker):
+    cooldowns = load_signal_cooldowns()
+    key = f'{category}_{ticker}'
+    if key in cooldowns:
+        expires = datetime.fromisoformat(cooldowns[key])
+        if datetime.now(timezone.utc) < expires:
+            return True
+        # Expired — clean up
+        del cooldowns[key]
+        save_signal_cooldowns(cooldowns)
+    return False
+
+
+def set_cooldown(category, ticker):
+    cooldowns = load_signal_cooldowns()
+    key = f'{category}_{ticker}'
+    cooldowns[key] = (datetime.now(timezone.utc) + timedelta(hours=SIGNAL_COOLDOWN_HOURS)).isoformat()
+    save_signal_cooldowns(cooldowns)
+
+
+def get_daily_trade_count():
+    if os.path.exists(DAILY_TRADE_COUNT_FILE):
+        try:
+            with open(DAILY_TRADE_COUNT_FILE) as f:
+                data = json.load(f)
+            today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+            if data.get('date') == today:
+                return data.get('count', 0)
+        except Exception:
+            pass
+    return 0
+
+
+def increment_daily_trade_count():
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    data = {'date': today, 'count': get_daily_trade_count() + 1}
+    with open(DAILY_TRADE_COUNT_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
 
 
 def get_total_exposure():
@@ -309,8 +393,62 @@ def _normalize_headline(text):
     return text
 
 
+def get_current_vix():
+    '''Fetch VIX level, cached for 30 minutes.'''
+    if os.path.exists(VIX_CACHE_FILE):
+        try:
+            with open(VIX_CACHE_FILE) as f:
+                cache = json.load(f)
+            if time.time() - cache.get('timestamp', 0) < 1800:  # 30 min TTL
+                return cache.get('vix', None)
+        except:
+            pass
+    try:
+        import yfinance as yf
+        vix = yf.Ticker('^VIX')
+        hist = vix.history(period='1d')
+        if not hist.empty:
+            vix_level = float(hist['Close'].iloc[-1])
+            with open(VIX_CACHE_FILE, 'w') as f:
+                json.dump({'vix': vix_level, 'timestamp': time.time()}, f)
+            return vix_level
+    except Exception as e:
+        print(f'  VIX fetch error: {e}')
+    return None
+
+
+def is_already_priced_in():
+    '''Check if SPY already dropped >1% today — move is priced in.'''
+    try:
+        url = f'https://data.alpaca.markets/v2/stocks/SPY/bars'
+        params = {'timeframe': '1Day', 'limit': 1, 'feed': 'iex'}
+        r = requests.get(url, params=params, headers=alpaca_headers(), timeout=8)
+        if r.status_code == 200:
+            bars = r.json().get('bars', [])
+            if bars:
+                open_price = float(bars[-1]['o'])
+                close_price = float(bars[-1]['c'])
+                daily_change = ((close_price - open_price) / open_price) * 100
+                if daily_change <= -1.0:
+                    print(f'  Already priced in: SPY {daily_change:.2f}% today')
+                    return True
+    except Exception as e:
+        print(f'  Priced-in check error: {e}')
+    return False
+
+
 def execute_paper_trade(signal, post, category):
     """Execute a paper trade with full safety guards."""
+    # GUARD: Daily trade limit
+    if get_daily_trade_count() >= MAX_TRADES_PER_DAY:
+        print(f'  Skipping — hit daily trade limit ({MAX_TRADES_PER_DAY})')
+        return None
+
+    # GUARD: Signal cooldown
+    if is_on_cooldown(category, signal["ticker"]):
+        print(f'  Skipping — {category}_{signal["ticker"]} on cooldown')
+        return None
+
     # HARD GATE: Never execute real trades outside market hours
     now_et = datetime.now(timezone(timedelta(hours=-4)))  # ET approximation
     hour = now_et.hour
@@ -389,6 +527,31 @@ def execute_paper_trade(signal, post, category):
     # HARD CAP position size: $2,500 regardless of multipliers
     adjusted_size = MAX_PER_TICKER_DAILY
 
+    # GUARD: VIX regime check for UVIX
+    if actual_ticker == 'UVIX':
+        vix = get_current_vix()
+        if vix is not None and vix >= VIX_REGIME_THRESHOLD:
+            print(f'  VIX regime block: VIX={vix:.1f} >= {VIX_REGIME_THRESHOLD} — UVIX not effective')
+            # Route to GLD or SQQQ instead
+            for fallback_ticker in ['GLD', 'SQQQ']:
+                if fallback_ticker not in held_tickers:
+                    print(f'  VIX regime routing to {fallback_ticker}')
+                    actual_ticker = fallback_ticker
+                    side = 'buy'
+                    trade_direction = f'LONG (VIX regime fallback from UVIX)'
+                    price = get_current_price(actual_ticker)
+                    if price and price > 0:
+                        shares = max(1, int(adjusted_size / price))
+                        break
+            else:
+                return None  # no fallback available
+
+    # GUARD: Already priced in — don't short if market already tanked
+    if action == 'SHORT' or actual_ticker in ('SQQQ', 'SPXU'):
+        if is_already_priced_in():
+            print(f'  Skipping — market drop already priced in')
+            return None
+
     # Get price and calculate shares
     price = get_current_price(actual_ticker)
     if not price or price <= 0:
@@ -411,12 +574,19 @@ def execute_paper_trade(signal, post, category):
         exit_strategy = "5 trading days"
         exit_by = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
 
+    # Dry-run mode — skip actual order
+    if DRY_RUN:
+        print(f'  [DRY-RUN] Would {side} {shares} {actual_ticker} @ ${price:.2f} (category={category})')
+        return {'dry_run': True, 'ticker': actual_ticker, 'shares': shares, 'price': price, 'side': side, 'category': category, 'direction': trade_direction, 'actual_ticker': actual_ticker, 'entry_price': price, 'position_value': shares * price, 'exit_strategy': 'DRY_RUN'}
+
     # Submit order
     order = submit_alpaca_order(actual_ticker, shares, side)
 
     # Record in traded_today
     if order:
         record_traded_today(post["id"], actual_ticker)
+        set_cooldown(category, actual_ticker)
+        increment_daily_trade_count()
 
     # Log trade
     trade = {
@@ -667,28 +837,76 @@ def monitor_open_positions():
             except (ValueError, TypeError):
                 pass
 
+        # Load trailing stops state
+        trailing_stops = load_trailing_stops()
+        trail_state = trailing_stops.get(ticker, {'high_pct': 0, 'trail_stop_pct': None, 'partial_taken': False})
+
+        targets = SCALP_TARGETS.get(ticker, SCALP_TARGETS['DEFAULT'])
+        take_profit = targets['take_profit']
+        stop_loss = targets['stop_loss']
+        trail_activation = targets.get('trail_activation_pct', 0.5)
+        trail_distance = targets.get('trail_distance_pct', 0.3)
+
         close_reason = None
+        close_qty = None  # None = close all, else partial
 
-        # Per-ticker profit/stop targets
-        targets = SCALP_TARGETS.get(ticker, SCALP_TARGETS["DEFAULT"])
-        take_profit = targets["take_profit"]
-        stop_loss = targets["stop_loss"]
+        # Update high water mark
+        if pnl_pct > trail_state.get('high_pct', 0):
+            trail_state['high_pct'] = pnl_pct
 
-        # Rule 1: Take profit (per-ticker target)
+        high_pct = trail_state['high_pct']
+
+        # Trailing stop tiers:
+        # Tier 1: Up +0.5% → trail at breakeven (0%)
+        # Tier 2: Up +1.0% → trail at 0.5% below high + partial exit 50%
+        # Tier 3: Up +1.5% → trail at 1.0% below high
+        if high_pct >= 1.5:
+            trail_state['trail_stop_pct'] = high_pct - 1.0
+        elif high_pct >= 1.0:
+            trail_state['trail_stop_pct'] = high_pct - 0.5
+            # Partial exit: close 50% at +1.0% if not already done
+            if not trail_state.get('partial_taken', False):
+                total_qty = int(pos.get('qty', 0))
+                partial_qty = max(1, total_qty // 2)
+                print(f'  PARTIAL EXIT: Closing {partial_qty}/{total_qty} of {ticker} at +{pnl_pct:.2f}%')
+                try:
+                    payload = {'symbol': ticker, 'qty': str(partial_qty), 'side': 'sell', 'type': 'market', 'time_in_force': 'day'}
+                    resp = requests.post(f'{ALPACA_URL}/v2/orders', json=payload, headers=headers, timeout=10)
+                    if resp.status_code in (200, 201):
+                        trail_state['partial_taken'] = True
+                        partial_pnl = (pnl_pct / 100) * (float(pos.get('market_value', 0)) / 2)
+                        emoji = '💰'
+                        msg = f'{emoji} *TrumpQuant Partial Exit*\n\nTicker: {ticker}\nClosed: {partial_qty}/{total_qty} shares\nP&L: +{pnl_pct:.2f}%\nRest trailing at {trail_state["trail_stop_pct"]:.1f}%'
+                        send_telegram(msg)
+                except Exception as e:
+                    print(f'  Partial exit error: {e}')
+        elif high_pct >= 0.5:
+            trail_state['trail_stop_pct'] = 0  # breakeven
+
+        # Save trailing stop state
+        trailing_stops[ticker] = trail_state
+        save_trailing_stops(trailing_stops)
+
+        # Check close conditions
+        # Rule 1: Take profit (still keep as hard ceiling)
         if pnl_pct >= take_profit:
-            close_reason = f"PROFIT_TAKE (+{pnl_pct:.2f}%, target {take_profit}%)"
+            close_reason = f'PROFIT_TAKE (+{pnl_pct:.2f}%, target {take_profit}%)'
 
-        # Rule 2: Stop loss (per-ticker target)
+        # Rule 2: Trailing stop hit
+        elif trail_state.get('trail_stop_pct') is not None and pnl_pct <= trail_state['trail_stop_pct']:
+            close_reason = f'TRAILING_STOP ({pnl_pct:.2f}%, trail at {trail_state["trail_stop_pct"]:.1f}%)'
+
+        # Rule 3: Hard stop loss (unchanged)
         elif pnl_pct <= stop_loss:
-            close_reason = f"STOP_LOSS ({pnl_pct:.2f}%, limit {stop_loss}%)"
+            close_reason = f'STOP_LOSS ({pnl_pct:.2f}%, limit {stop_loss}%)'
 
-        # Rule 3: Time-based scalp exit (>2 hours and profitable)
+        # Rule 4: Time-based (unchanged)
         elif hours_held > 2.0 and unrealized_pl > 0:
-            close_reason = f"SCALP_COMPLETE ({hours_held:.1f}h, +{pnl_pct:.2f}%)"
+            close_reason = f'SCALP_COMPLETE ({hours_held:.1f}h, +{pnl_pct:.2f}%)'
 
-        # Rule 4: Safety — force close if held > 6.5 hours (full market day)
+        # Rule 5: Stale
         elif hours_held > 6.5:
-            close_reason = f"STALE_POSITION ({hours_held:.1f}h)"
+            close_reason = f'STALE_POSITION ({hours_held:.1f}h)'
 
         if close_reason:
             print(f"  MONITOR: Closing {ticker} — {close_reason}")
@@ -700,6 +918,11 @@ def monitor_open_positions():
                 )
                 if resp.status_code in (200, 204):
                     closed_tickers.append(ticker)
+
+                    # Clean up trailing stop state
+                    if ticker in trailing_stops:
+                        del trailing_stops[ticker]
+                        save_trailing_stops(trailing_stops)
 
                     # Log to learning_log.jsonl
                     log_entry = {
@@ -714,6 +937,29 @@ def monitor_open_positions():
                     }
                     with open(LEARNING_LOG_FILE, "a") as f:
                         f.write(json.dumps(log_entry) + "\n")
+
+                    # Feed learning engine with full trade context
+                    trade_result = {
+                        'signal_category': trade_meta.get('signal_category', 'UNKNOWN'),
+                        'signal_ticker': trade_meta.get('signal_ticker', ticker),
+                        'actual_ticker': ticker,
+                        'direction': trade_meta.get('direction', 'LONG'),
+                        'entry_price': trade_meta.get('entry_price', 0),
+                        'exit_price': float(pos.get('current_price', pos.get('avg_entry_price', 0))),
+                        'pnl': unrealized_pl,
+                        'exit_reason': close_reason,
+                        'trade_id': trade_meta.get('trade_id', ''),
+                        'avg_return': trade_meta.get('avg_return', 0),
+                        'target_pct': trade_meta.get('target_pct', targets.get('take_profit', 1.0)),
+                        'stop_loss_pct': trade_meta.get('stop_loss_pct', targets.get('stop_loss', -0.5)),
+                        'timestamp': trade_meta.get('timestamp', ''),
+                        'closed_at': now.isoformat(),
+                    }
+                    try:
+                        record_outcome(trade_result)
+                        print(f'  Learning engine: recorded outcome for {ticker}')
+                    except Exception as e:
+                        print(f'  Learning engine error: {e}')
 
                     # Telegram notification
                     emoji = "💰" if unrealized_pl >= 0 else "🛑"
@@ -921,6 +1167,11 @@ def main():
                         best_category = cat
 
         if best_signal:
+            # Regime-aware filtering
+            if best_signal.get('regime_aware'):
+                # These signals need VIX check — handled in execute_paper_trade
+                pass  # The VIX gate in execute_paper_trade handles UVIX routing
+
             # Apply learned weights (but DON'T apply size multiplier — we hard-cap at $2,500)
             if learned_weights and best_category:
                 try:
@@ -940,7 +1191,8 @@ def main():
                 # Build and send alert
                 alert = build_alert(post, categories, best_signal, trade)
                 print(f"FIRING ALERT: {post['text'][:80]}...")
-                send_telegram(alert)
+                if not DRY_RUN:
+                    send_telegram(alert)
                 fired += 1
 
             # Also open swing position on high-conviction signals
@@ -1099,9 +1351,12 @@ def close_eod_positions():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) > 1 and sys.argv[1] == "eod":
+    if DRY_RUN:
+        print("[DRY-RUN MODE] No real orders or Telegram messages will be sent.")
+    args = [a for a in sys.argv[1:] if a != '--dry-run']
+    if args and args[0] == "eod":
         close_eod_positions()
-    elif len(sys.argv) > 1 and sys.argv[1] == "monitor":
+    elif args and args[0] == "monitor":
         monitor_open_positions()
     else:
         main()

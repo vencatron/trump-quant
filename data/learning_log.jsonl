@@ -1,0 +1,11 @@
+{"timestamp": "2026-03-24T16:18:55.510791+00:00", "ticker": "UVIX", "reason": "STOP_LOSS (-1.10%)", "pnl": -41.218125, "pnl_pct": -1.101, "hours_held": 0, "signal_category": "UNKNOWN", "entry_price": 0}
+{"timestamp": "2026-03-24T17:00:04.831526+00:00", "ticker": "UVIX", "reason": "PROFIT_TAKE (+1.32%)", "pnl": 33.0, "pnl_pct": 1.322, "hours_held": 0.68, "signal_category": "IRAN_ESCALATION", "entry_price": 8.32}
+{"timestamp": "2026-03-24T17:05:04.662907+00:00", "ticker": "UVIX", "reason": "PROFIT_TAKE (+2.61%)", "pnl": 65.34, "pnl_pct": 2.613, "hours_held": 0.08, "signal_category": "IRAN_ESCALATION", "entry_price": 8.41}
+{"timestamp": "2026-03-24T17:10:08.934835+00:00", "ticker": "SQQQ", "reason": "PROFIT_TAKE (+1.13%)", "pnl": 27.59, "pnl_pct": 1.134, "hours_held": 0.17, "signal_category": "IRAN_ESCALATION", "entry_price": 78.5}
+{"timestamp": "2026-03-24T18:00:04.294558+00:00", "ticker": "SQQQ", "reason": "STOP_LOSS (-0.54%)", "pnl": -13.33, "pnl_pct": -0.542, "hours_held": 0.5, "signal_category": "IRAN_ESCALATION", "entry_price": 79.28}
+{"timestamp": "2026-03-24T18:00:04.294558+00:00", "ticker": "UVIX", "reason": "STOP_LOSS (-2.31%)", "pnl": -57.6, "pnl_pct": -2.309, "hours_held": 0.5, "signal_category": "IRAN_ESCALATION", "entry_price": 8.66}
+{"timestamp": "2026-03-24T18:40:09.154096+00:00", "ticker": "SQQQ", "reason": "STOP_LOSS (-1.11%)", "pnl": -27.039998, "pnl_pct": -1.106, "hours_held": 0.67, "signal_category": "IRAN_ESCALATION", "entry_price": 78.9}
+{"timestamp": "2026-03-24T18:40:09.154096+00:00", "ticker": "UVIX", "reason": "STOP_LOSS (-1.53%)", "pnl": -38.300145, "pnl_pct": -1.531, "hours_held": 0.67, "signal_category": "IRAN_ESCALATION", "entry_price": 8.47}
+{"timestamp": "2026-03-24T19:10:11.325485+00:00", "ticker": "UVIX", "reason": "STOP_LOSS (-1.06%)", "pnl": -26.46, "pnl_pct": -1.06, "hours_held": 0.17, "signal_category": "IRAN_ESCALATION", "entry_price": 8.48}
+{"timestamp": "2026-03-24T19:55:06.175439+00:00", "ticker": "UVIX", "reason": "PROFIT_TAKE (+1.54%)", "pnl": 38.35, "pnl_pct": 1.538, "hours_held": 0.92, "signal_category": "IRAN_ESCALATION", "entry_price": 78.53}
+{"timestamp": "2026-03-24T20:25:04.210268+00:00", "ticker": "SQQQ", "reason": "STOP_LOSS (-2.60%)", "pnl": -63.24, "pnl_pct": -2.597, "hours_held": 1.42, "signal_category": "IRAN_ESCALATION", "entry_price": 78.53}
