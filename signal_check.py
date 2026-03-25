@@ -767,16 +767,34 @@ def build_alert(post, categories, signal, trade=None):
 
 
 def send_telegram(text):
-    """Use openclaw to send a Telegram message to Ron."""
+    """Send Telegram message via openclaw gateway system event (works from cron context)."""
+    # Method 1: openclaw system event — triggers Hamilton to send the message
     try:
         result = subprocess.run(
-            ["openclaw", "message", "send", "--to", "8387647137", "--channel", "telegram", "--message", text],
+            ["openclaw", "system", "event", "--text", f"TRUMPQUANT_ALERT: {text}", "--mode", "now"],
             capture_output=True, text=True, timeout=15
         )
-        return result.returncode == 0
+        if result.returncode == 0:
+            return True
     except Exception as e:
-        print(f"Telegram send error: {e}")
-        return False
+        print(f"Telegram send error (method 1): {e}")
+
+    # Method 2: Write to notification queue — Hamilton picks up on next run
+    try:
+        queue_file = os.path.join(DATA_DIR, "telegram_queue.json")
+        queue = []
+        if os.path.exists(queue_file):
+            with open(queue_file) as f:
+                queue = json.load(f)
+        queue.append({"text": text, "ts": datetime.now(timezone.utc).isoformat()})
+        with open(queue_file, "w") as f:
+            json.dump(queue, f)
+        print(f"[Telegram queued]: {text[:80]}...")
+        return True
+    except Exception as e:
+        print(f"Telegram queue error: {e}")
+
+    return False
 
 
 def _find_trade_meta(ticker, active_scalps):

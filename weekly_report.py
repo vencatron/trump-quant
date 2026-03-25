@@ -14,7 +14,7 @@ def send_telegram(text):
     """Use openclaw to send a Telegram message."""
     try:
         result = subprocess.run(
-            ["openclaw", "message", "send", "--to", "8387647137", "--channel", "telegram", "--message", text],
+            ["openclaw", "message", "send", "--target", "8387647137", "--channel", "telegram", "--message", text],
             capture_output=True, text=True, timeout=15
         )
         return result.returncode == 0

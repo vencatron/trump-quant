@@ -1,1 +1,44 @@
-[]
+[
+  {
+    "position_id": "swing-1774445151-QQQ",
+    "ticker": "QQQ",
+    "direction": "BUY",
+    "shares": 8,
+    "entry_price": 589.67,
+    "position_value": 4717.36,
+    "target_pct": 4.0,
+    "stop_pct": 1.5,
+    "hold_days": 3,
+    "exit_by": "2026-03-28T13:25:51.474702+00:00",
+    "conviction": "VERY_HIGH",
+    "thesis": "Peace = sustained tech rally, not just same-day pop",
+    "signal_category": "IRAN_DEESCALATION",
+    "order_id": "2a3ec3bd-e1c0-4aea-b4f6-f088cc9a3679",
+    "opened_at": "2026-03-25T13:25:51.474728+00:00",
+    "status": "OPEN",
+    "current_price": 589.36,
+    "current_pnl_pct": -0.05257177743482718,
+    "current_pnl_dollars": -2.4799999999995634
+  },
+  {
+    "position_id": "swing-1774445151-XLE",
+    "ticker": "XLE",
+    "direction": "SHORT",
+    "shares": 83,
+    "entry_price": 60.19,
+    "position_value": 4995.7699999999995,
+    "target_pct": 3.0,
+    "stop_pct": 1.5,
+    "hold_days": 3,
+    "exit_by": "2026-03-28T13:25:51.939318+00:00",
+    "conviction": "HIGH",
+    "thesis": "Oil drops multi-day as Hormuz risk fades",
+    "signal_category": "IRAN_DEESCALATION",
+    "order_id": "6e54c13a-6a0f-47ba-9d5f-1e656d5af811",
+    "opened_at": "2026-03-25T13:25:51.939371+00:00",
+    "status": "OPEN",
+    "current_price": 60.66,
+    "current_pnl_pct": -0.7808606080744291,
+    "current_pnl_dollars": -39.009999999999906
+  }
+]

@@ -1,15 +1,13 @@
 {
   "UNKNOWN": {
-    "rolling_win_rate": 0.0,
-    "total_trades": 1,
-    "recent_trades": 1,
+    "rolling_win_rate": 0.333,
+    "total_trades": 3,
+    "recent_trades": 3,
     "avg_actual_vs_predicted": 1.0,
     "best_time_of_day": "00:00 ET",
-    "worst_conditions": [
-      "UNKNOWN (avg -1.10%)"
-    ],
+    "worst_conditions": [],
     "recommended_size_multiplier": 1.0,
-    "avg_pnl_pct": -1.101
+    "avg_pnl_pct": 0.923
   },
   "IRAN_ESCALATION": {
     "rolling_win_rate": 0.4,
@@ -24,7 +22,7 @@
     "avg_pnl_pct": -0.254
   },
   "_meta": {
-    "updated": "2026-03-25T05:07:00.334059+00:00",
-    "total_trades": 11
+    "updated": "2026-03-25T17:36:20.997982+00:00",
+    "total_trades": 13
   }
 }
