@@ -1,456 +1,1805 @@
 {
+  "_cache_time": 1774416167.418116,
   "trades": [
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2014-03-04",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Angus King",
+      "ticker": "LLY",
+      "transaction": "Sale (Full)",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "I",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2013-09-06",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Angus King",
+      "ticker": "META",
+      "transaction": "Sale (Full)",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "I",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2012-03-09",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Angus King",
+      "ticker": "ADSK",
+      "transaction": "Sale (Full)",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "I",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2013-03-07",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Angus King",
+      "ticker": "PYPL",
+      "transaction": "Sale (Full)",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "I",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2011-03-11",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Angus King",
+      "ticker": "NFLX",
+      "transaction": "Sale (Full)",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "I",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2008-05-13",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Angus King",
+      "ticker": "BX",
+      "transaction": "Sale (Full)",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "I",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2010-03-09",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Angus King",
+      "ticker": "UBER",
+      "transaction": "Sale (Full)",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "I",
+      "committee": ""
     },
     {
-      "politician": "PSP Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2014-05-28",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Angus King",
+      "ticker": "ONON",
+      "transaction": "Sale (Full)",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "I",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2011-09-06",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Angus King",
+      "ticker": "MSFT",
+      "transaction": "Sale (Full)",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "I",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2012-08-29",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "David J. Taylor",
+      "ticker": "LRCX",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-03-12",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2008-05-22",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "David J. Taylor",
+      "ticker": "IBP",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-03-12",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2009-03-10",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "David J. Taylor",
+      "ticker": "HD",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-03-12",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2008-09-05",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "David J. Taylor",
+      "ticker": "RPM",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-03-12",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2009-09-03",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "David J. Taylor",
+      "ticker": "PH",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-03-12",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2010-09-08",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "David J. Taylor",
+      "ticker": "CVX",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-03-12",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Lonkero, LLC  (CIK 0001728836)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2024-06-24",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "David J. Taylor",
+      "ticker": "CVX",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-03-11",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2011-06-07",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "David J. Taylor",
+      "ticker": "MPC",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-03-11",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2012-05-03",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "David J. Taylor",
+      "ticker": "MPC",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-03-11",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Lonkero, LLC  (CIK 0001728836)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2024-06-24",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "David J. Taylor",
+      "ticker": "RPM",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-03-11",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2008-05-20",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "David J. Taylor",
+      "ticker": "FITB",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-03-11",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "PSP Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2014-08-22",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "A. Mitchell Jr. McConnell",
+      "ticker": "WFC",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-03-01",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2012-01-25",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "August Lee Pfluger Ii",
+      "ticker": "WBD",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2014-01-21",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Thomas H. Kean Jr",
+      "ticker": "LIN",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Lonkero, LLC  (CIK 0001728836)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2024-06-24",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Thomas H. Kean Jr",
+      "ticker": "WAT",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2009-07-20",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Thomas H. Kean Jr",
+      "ticker": "FCNCA",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-05",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Lumavate, LLC  (CIK 0001647185)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2018-02-14",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Thomas H. Kean Jr",
+      "ticker": "GOOGL",
+      "transaction": "Sale",
+      "amount": "15001.0",
+      "date": "2026-02-05",
+      "party": "R",
+      "committee": ""
     },
     {
-      "politician": "Wells Fargo Commercial Mortgage Trust 2016-C34  (CIK 0001672587)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2016-05-24",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Cleo Fields",
+      "ticker": "MSFT",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-03-12",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2013-04-30",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Cleo Fields",
+      "ticker": "MSFT",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-03-12",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2009-06-11",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Thomas Suozzi",
+      "ticker": "URI",
+      "transaction": "Sale",
+      "amount": "15001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2009-07-13",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Thomas Suozzi",
+      "ticker": "PLTR",
+      "transaction": "Sale",
+      "amount": "15001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2009-07-20",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Thomas Suozzi",
+      "ticker": "AAPL",
+      "transaction": "Sale",
+      "amount": "15001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2011-04-29",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Thomas Suozzi",
+      "ticker": "AMD",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Lumavate, LLC  (CIK 0001647185)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2017-01-17",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "PANW",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-27",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Lonkero, LLC  (CIK 0001728836)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2023-03-08",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "IFNNY",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-27",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2008-05-20",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "FSS",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-26",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2009-11-30",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "INTU",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-20",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2010-09-07",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "V",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Lumavate, LLC  (CIK 0001647185)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2016-06-02",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "CVNA",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2012-04-30",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "GEV",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-05",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2008-05-22",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "UNH",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-05",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2010-09-14",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "CMI",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-05",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "SBT Bancorp, Inc.  (CIK 0001354174)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2017-05-11",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "NET",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-04",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2010-07-09",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "FICO",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-04",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "PSP Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2014-05-29",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "MRK",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-04",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2008-05-22",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "XOM",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-04",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2011-05-27",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "XOM",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2010-09-03",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "MNST",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Wells Fargo Commercial Mortgage Trust 2016-C34  (CIK 0001672587)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2016-04-27",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Josh Gottheimer",
+      "ticker": "MSFT",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "DriverReach Inc.  (CIK 0001822101)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2022-01-13",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Ed Case",
+      "ticker": "AAPL",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-12",
+      "party": "D",
+      "committee": ""
     },
     {
-      "politician": "Congressional Effect Family of Funds  (CIK 0001423047)",
-      "ticker": "",
-      "transaction": "Filing",
-      "amount": "See filing",
-      "date": "2011-11-29",
-      "party": "Unknown",
-      "source": "sec_edgar"
+      "politician": "Julia Letlow",
+      "ticker": "DINO",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-20",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "BXP",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-20",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "TRV",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-20",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "IBM",
+      "transaction": "Sale",
+      "amount": "50001.0",
+      "date": "2026-02-17",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "BK",
+      "transaction": "Purchase",
+      "amount": "50001.0",
+      "date": "2026-02-17",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "VST",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-17",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "EXE",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-17",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "IBM",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-17",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Austin Scott",
+      "ticker": "GEV",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-17",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Austin Scott",
+      "ticker": "GE",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-17",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "BK",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-17",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "PEG",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-17",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "ICLR",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-12",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "EXR",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-12",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "META",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-12",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "T",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-12",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "TTWO",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-12",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "REGN",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-12",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "AVGO",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-12",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "C",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-11",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "AMZN",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-11",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "WELL",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-11",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "THC",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-11",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "HUM",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "PM",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-05",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "PEP",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-05",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "PANW",
+      "transaction": "Sale",
+      "amount": "50001.0",
+      "date": "2026-02-05",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "C",
+      "transaction": "Purchase",
+      "amount": "50001.0",
+      "date": "2026-02-05",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "AMZN",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-05",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "BRCM",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-04",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "C",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-04",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "MMM",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-04",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "CMI",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-04",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Jonathan Jackson",
+      "ticker": "SHOP",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-03",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "AAPL",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "MKC",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "DRS",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "CSCO",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "MSFT",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "URI",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "CRM",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "AMD",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "PG",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "IBM",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "INTU",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "TSM",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "BA",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Julia Letlow",
+      "ticker": "MMM",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Richard W. Allen",
+      "ticker": "KMI",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-19",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Richard W. Allen",
+      "ticker": "TSM",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-19",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Richard W. Allen",
+      "ticker": "INTU",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-19",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Richard W. Allen",
+      "ticker": "INTU",
+      "transaction": "Sale",
+      "amount": "15001.0",
+      "date": "2026-02-18",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Markwayne Mullin",
+      "ticker": "INTU",
+      "transaction": "Sale (Full)",
+      "amount": "15001.0",
+      "date": "2026-02-25",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Markwayne Mullin",
+      "ticker": "AZO",
+      "transaction": "Sale (Full)",
+      "amount": "50001.0",
+      "date": "2026-02-25",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Markwayne Mullin",
+      "ticker": "UNH",
+      "transaction": "Purchase",
+      "amount": "50001.0",
+      "date": "2026-02-25",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Kelly Louise Morrison",
+      "ticker": "AJG",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-03-08",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Kelly Louise Morrison",
+      "ticker": "AJG",
+      "transaction": "Sale",
+      "amount": "15001.0",
+      "date": "2026-03-08",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Kelly Louise Morrison",
+      "ticker": "MICC",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-03-08",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Kelly Louise Morrison",
+      "ticker": "MICC",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-03-08",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Kelly Louise Morrison",
+      "ticker": "AJG",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-03-08",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "NDAQ",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-27",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "JLL",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-27",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "EME",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-27",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "MORN",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-25",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "JLL",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-24",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "TECH",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-24",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "CDW",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-24",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "FBIN",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-24",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "PAYX",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-24",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "CLH",
+      "transaction": "Purchase",
+      "amount": "15001.0",
+      "date": "2026-02-23",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "JLL",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-23",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "ENTG",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-23",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "PAYX",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-23",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "ROL",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-20",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "MORN",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-19",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "JLL",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "MIDD",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "ROL",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "BJ",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "MIDD",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-17",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "BJ",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "ROL",
+      "transaction": "Purchase",
+      "amount": "15001.0",
+      "date": "2026-02-13",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "CHRW",
+      "transaction": "Purchase",
+      "amount": "15001.0",
+      "date": "2026-02-13",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "VIK",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-11",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "JLL",
+      "transaction": "Sale",
+      "amount": "15001.0",
+      "date": "2026-02-11",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "LH",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-11",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "MIDD",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-11",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "TSCO",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "VIK",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-09",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "ENTG",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-09",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "SGI",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-09",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "BJ",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-09",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "CHRW",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-09",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "MORN",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-06",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "CHRW",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-06",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "STE",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-06",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "MIDD",
+      "transaction": "Sale",
+      "amount": "15001.0",
+      "date": "2026-02-06",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "BRO",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-06",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "BJ",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-05",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "CHRW",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-05",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "EME",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-04",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "LH",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-04",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "VIK",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-03",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "April Mcclain Delaney",
+      "ticker": "BJ",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-02",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Pete Sessions",
+      "ticker": "VZ",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-03-09",
+      "party": "R",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "FSS",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-03-02",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "THR",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-03-02",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "TSM",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-26",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "UBER",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-24",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "HOOD",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-24",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "MU",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-24",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "ORCL",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-24",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "SKY",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-23",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "TPH",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-23",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "XIACF",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-20",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "PRIM",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "APPF",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "DSGX",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "PAR",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "RARE",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-18",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "FSV",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-17",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "MHVYF",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "FSV",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-13",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "COIN",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-12",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "TRGP",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "ACN",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "FSV",
+      "transaction": "Purchase",
+      "amount": "15001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "EG",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "BKNG",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "UAL",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "ABT",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "TTD",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "PFE",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "WMB",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "ILMN",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "COF",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "COP",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "FIS",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "SWKS",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "UNH",
+      "transaction": "Sale",
+      "amount": "15001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "CAG",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "WBD",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "KVUE",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "GE",
+      "transaction": "Sale",
+      "amount": "15001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "AMZN",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "XOM",
+      "transaction": "Purchase",
+      "amount": "50001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "ERIE",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "GDDY",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "PRU",
+      "transaction": "Sale",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "EQT",
+      "transaction": "Purchase",
+      "amount": "1001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
+    },
+    {
+      "politician": "Gilbert Cisneros",
+      "ticker": "ROP",
+      "transaction": "Sale",
+      "amount": "15001.0",
+      "date": "2026-02-10",
+      "party": "D",
+      "committee": ""
     }
-  ],
-  "fetched_at": "2026-03-25T05:20:49.303976+00:00",
-  "count": 50
+  ]
 }

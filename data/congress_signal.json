@@ -1,8 +1,9 @@
 {
   "signal": "NEUTRAL",
-  "tickers": [],
-  "evidence": "No defense/energy trades found in recent disclosures",
-  "confidence": "LOW",
-  "war_trades": [],
-  "generated_at": "2026-03-25T05:20:49.306244+00:00"
+  "confidence": "No significant defense trading pattern",
+  "net_buys": {},
+  "top_trades": [],
+  "summary": "Mixed activity: 0 war ticker trades in 7d",
+  "recent_defense_buys_3d": 0,
+  "analyzed_at": "2026-03-25T05:22:47.419792+00:00"
 }

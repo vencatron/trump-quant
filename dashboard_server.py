@@ -444,6 +444,18 @@ async def get_playbook():
     return TOP_SIGNALS
 
 
+@app.get("/api/congress")
+async def get_congress():
+    f = DATA_DIR / "congress_signal.json"
+    if not f.exists():
+        return {"signal": "NEUTRAL", "top_trades": [], "summary": "No data yet"}
+    try:
+        with open(f) as fp:
+            return json.load(fp)
+    except (json.JSONDecodeError, ValueError):
+        return {"signal": "NEUTRAL", "top_trades": [], "summary": "Error reading data"}
+
+
 @app.get("/api/swings")
 async def get_swings():
     swing_file = DATA_DIR / "swing_positions.json"
