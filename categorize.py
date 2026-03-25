@@ -55,6 +55,13 @@ CATEGORIES = {
         "military", "troops", "bombs", "strike", "attack",
         "airstrike", "warship", "navy", "pentagon",
     ],
+    "WAR_ESCALATION": [
+        "war", "invasion", "deploy troops", "bombs", "airstrike",
+        "warship", "carrier group", "mobilize", "military strike",
+    ],
+    "MUSK_TRUMP": [
+        "musk", "tesla", "elon", "doge", "spacex", "x.com",
+    ],
 }
 
 # Ticker / company name mapping for SPECIFIC_TICKER detection

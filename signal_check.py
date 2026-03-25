@@ -36,6 +36,7 @@ GOOGLE_NEWS_RSS = "https://news.google.com/rss/search?q=Trump+statement+OR+Trump
 SIGNAL_CATEGORIES = {
     "TARIFFS", "TRADE_DEAL", "CRYPTO", "FED_ATTACK", "MARKET_PUMP",
     "SPECIFIC_TICKER", "IRAN_ESCALATION", "IRAN_DEESCALATION", "OIL_SHOCK",
+    "WAR_ESCALATION", "MUSK_TRUMP",
 }
 
 # Alpaca paper trading credentials
@@ -47,9 +48,30 @@ ALPACA_URL = "https://paper-api.alpaca.markets"
 INVERSE_MAP = {
     "QQQ": "SQQQ",   # 3x inverse Nasdaq
     "SPY": "SPXU",   # 3x inverse S&P
+    "XLE": None,      # Energy — no inverse, skip SHORT
+    "XLB": None,      # Materials — no inverse, skip SHORT
 }
 
 POSITION_SIZE = 2500  # max dollars per trade
+
+# Per-ticker profit/stop targets for monitor_open_positions
+SCALP_TARGETS = {
+    "UVIX":  {"take_profit": 1.5, "stop_loss": -0.5},
+    "SQQQ":  {"take_profit": 1.5, "stop_loss": -0.5},
+    "SPXU":  {"take_profit": 1.5, "stop_loss": -0.5},
+    "SPY":   {"take_profit": 0.8, "stop_loss": -0.5},
+    "QQQ":   {"take_profit": 0.8, "stop_loss": -0.5},
+    "XLE":   {"take_profit": 2.0, "stop_loss": -0.8},
+    "USO":   {"take_profit": 2.5, "stop_loss": -1.0},
+    "LMT":   {"take_profit": 2.0, "stop_loss": -0.8},
+    "TSLA":  {"take_profit": 2.5, "stop_loss": -1.5},
+    "NVDA":  {"take_profit": 2.0, "stop_loss": -1.5},
+    "COIN":  {"take_profit": 3.0, "stop_loss": -2.0},
+    "DEFAULT": {"take_profit": 1.0, "stop_loss": -0.5},
+}
+
+# Watchlist for all tradeable tickers
+WATCHLIST = ["UVIX", "SQQQ", "SPXU", "SPY", "QQQ", "GLD", "COIN", "XLE", "USO", "LMT", "TSLA", "XLB", "NVDA"]
 
 # Fallback routing when primary ticker is already held
 FALLBACK_MAP = {
@@ -57,6 +79,10 @@ FALLBACK_MAP = {
     "SQQQ": "SPXU",
     "SPXU": None,   # no further fallback
     "GLD": None,
+    "XLE": "USO",
+    "USO": None,
+    "LMT": None,
+    "TSLA": None,
 }
 MAX_CONCURRENT_POSITIONS = 2  # max 2 concurrent positions across all tickers
 
@@ -64,24 +90,27 @@ MAX_CONCURRENT_POSITIONS = 2  # max 2 concurrent positions across all tickers
 TOP_SIGNALS = {
     # Iran war signals — highest volatility, biggest moves
     "IRAN_ESCALATION": [
-        {"ticker": "GLD",  "direction": "BULLISH", "avg_return": +3.2, "window": "same day",  "confidence": "HIGH", "action": "BUY"},
-        {"ticker": "QQQ",  "direction": "BEARISH", "avg_return": -2.1, "window": "same day",  "confidence": "HIGH", "action": "SHORT"},
-        {"ticker": "UVIX", "direction": "BULLISH", "avg_return": +8.5, "window": "same day",  "confidence": "HIGH", "action": "BUY"},
+        {"ticker": "UVIX", "direction": "BUY",  "action": "BUY",  "target_pct": 2.0, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 8.5,  "window": "same day", "rationale": "VIX spikes on war"},
+        {"ticker": "SQQQ", "direction": "BUY",  "action": "BUY",  "target_pct": 2.0, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 2.1,  "window": "same day", "rationale": "QQQ drops on escalation"},
+        {"ticker": "XLE",  "direction": "BUY",  "action": "BUY",  "target_pct": 3.0, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 3.5,  "window": "same day", "rationale": "Energy pumps on Hormuz risk"},
+        {"ticker": "LMT",  "direction": "BUY",  "action": "BUY",  "target_pct": 2.5, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 2.8,  "window": "same day", "rationale": "Defense contracts on war"},
     ],
     "IRAN_DEESCALATION": [
-        {"ticker": "SPY",  "direction": "BULLISH", "avg_return": +2.5, "window": "same day",  "confidence": "HIGH", "action": "BUY"},
-        {"ticker": "QQQ",  "direction": "BULLISH", "avg_return": +3.1, "window": "same day",  "confidence": "HIGH", "action": "BUY"},
-        {"ticker": "GLD",  "direction": "BEARISH", "avg_return": -1.8, "window": "same day",  "confidence": "MEDIUM", "action": "SHORT"},
+        {"ticker": "SPY",  "direction": "BUY",  "action": "BUY",  "target_pct": 2.5, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 2.5,  "window": "same day", "rationale": "Market rips on peace", "uvix_alert": True},
+        {"ticker": "QQQ",  "direction": "BUY",  "action": "BUY",  "target_pct": 3.0, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 3.1,  "window": "same day", "rationale": "Tech leads recovery", "uvix_alert": True},
+        {"ticker": "TSLA", "direction": "BUY",  "action": "BUY",  "target_pct": 4.0, "stop_pct": 1.0, "confidence": "HIGH", "avg_return": 4.2,  "window": "same day", "rationale": "Musk/Trump correlation — TSLA rips on good news"},
     ],
     # Tariff signals — validated from 1,740 posts, p=0.0000
     "TARIFFS": [
-        {"ticker": "COIN", "direction": "BEARISH", "avg_return": -3.5, "window": "same day",  "confidence": "HIGH", "action": "SHORT"},
-        {"ticker": "QQQ",  "direction": "BEARISH", "avg_return": -0.6, "window": "same day",  "confidence": "HIGH", "action": "SHORT"},
-        {"ticker": "GLD",  "direction": "BULLISH", "avg_return": +2.3, "window": "1 week",    "confidence": "HIGH", "action": "BUY"},
+        {"ticker": "SQQQ", "direction": "BUY",  "action": "BUY",  "target_pct": 1.5, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 1.8,  "window": "same day", "rationale": "QQQ -0.6% on tariff posts"},
+        {"ticker": "SPXU", "direction": "BUY",  "action": "BUY",  "target_pct": 1.0, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 1.4,  "window": "same day", "rationale": "SPY drops same day"},
+        {"ticker": "XLB",  "direction": "SHORT","action": "SHORT", "target_pct": 1.2, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 1.2,  "window": "same day", "rationale": "Materials sector -1.2% on tariffs"},
     ],
     "TRADE_DEAL": [
-        {"ticker": "SPY",  "direction": "BULLISH", "avg_return": +0.4, "window": "1 week",    "confidence": "HIGH", "action": "BUY"},
-        {"ticker": "QQQ",  "direction": "BULLISH", "avg_return": +0.3, "window": "1 week",    "confidence": "HIGH", "action": "BUY"},
+        {"ticker": "QQQ",  "direction": "BUY",  "action": "BUY",  "target_pct": 1.5, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 1.5,  "window": "same day", "rationale": "Market pumps on deal"},
+        {"ticker": "SPY",  "direction": "BUY",  "action": "BUY",  "target_pct": 1.0, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 1.0,  "window": "same day", "rationale": "Broad market long"},
+        {"ticker": "TSLA", "direction": "BUY",  "action": "BUY",  "target_pct": 3.0, "stop_pct": 1.0, "confidence": "HIGH", "avg_return": 3.2,  "window": "same day", "rationale": "TSLA rips on Trump good news"},
+        {"ticker": "XLE",  "direction": "SHORT","action": "SHORT", "target_pct": 1.5, "stop_pct": 0.5, "confidence": "MEDIUM","avg_return": 1.5, "window": "same day", "rationale": "Oil drops on Iran deal"},
     ],
     "MARKET_PUMP": [
         {"ticker": "QQQ",  "direction": "BEARISH", "avg_return": -0.5, "window": "same day",  "confidence": "HIGH", "action": "SHORT"},
@@ -92,8 +121,15 @@ TOP_SIGNALS = {
         {"ticker": "GLD",  "direction": "BULLISH", "avg_return": +2.4, "window": "1 week",    "confidence": "HIGH", "action": "BUY"},
     ],
     "OIL_SHOCK": [
-        {"ticker": "GLD",  "direction": "BULLISH", "avg_return": +2.0, "window": "same day",  "confidence": "MEDIUM", "action": "BUY"},
-        {"ticker": "SPY",  "direction": "BEARISH", "avg_return": -0.8, "window": "same day",  "confidence": "MEDIUM", "action": "SHORT"},
+        {"ticker": "USO",  "direction": "BUY",  "action": "BUY",  "target_pct": 3.0, "stop_pct": 0.8, "confidence": "HIGH", "avg_return": 4.0,  "window": "same day", "rationale": "Oil ETF spikes on supply shock"},
+        {"ticker": "XLE",  "direction": "BUY",  "action": "BUY",  "target_pct": 2.5, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 3.0,  "window": "same day", "rationale": "Energy sector pumps"},
+    ],
+    "WAR_ESCALATION": [
+        {"ticker": "LMT",  "direction": "BUY",  "action": "BUY",  "target_pct": 2.5, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 2.8,  "window": "same day", "rationale": "Lockheed prints on conflict"},
+        {"ticker": "SQQQ", "direction": "BUY",  "action": "BUY",  "target_pct": 2.0, "stop_pct": 0.5, "confidence": "HIGH", "avg_return": 2.0,  "window": "same day", "rationale": "Market drops on war news"},
+    ],
+    "MUSK_TRUMP": [
+        {"ticker": "TSLA", "direction": "BUY",  "action": "BUY",  "target_pct": 3.0, "stop_pct": 1.0, "confidence": "MEDIUM","avg_return": 3.5,  "window": "same day", "rationale": "Musk/Trump correlation play"},
     ],
 }
 
@@ -274,6 +310,13 @@ def _normalize_headline(text):
 
 def execute_paper_trade(signal, post, category):
     """Execute a paper trade with full safety guards."""
+    # HARD GATE: Never execute real trades outside market hours
+    now_et = datetime.now(timezone(timedelta(hours=-4)))  # ET approximation
+    hour = now_et.hour
+    if not (9 <= hour < 16):
+        print(f"  After-hours gate: {hour}:00 ET — skipping trade execution")
+        return None
+
     ticker = signal["ticker"]
     action = signal["action"]
     window = signal["window"]
@@ -625,13 +668,18 @@ def monitor_open_positions():
 
         close_reason = None
 
-        # Rule 1: Take profit at +1.0%
-        if pnl_pct >= 1.0:
-            close_reason = f"PROFIT_TAKE (+{pnl_pct:.2f}%)"
+        # Per-ticker profit/stop targets
+        targets = SCALP_TARGETS.get(ticker, SCALP_TARGETS["DEFAULT"])
+        take_profit = targets["take_profit"]
+        stop_loss = targets["stop_loss"]
 
-        # Rule 2: Stop loss at -0.5%
-        elif pnl_pct <= -0.5:
-            close_reason = f"STOP_LOSS ({pnl_pct:.2f}%)"
+        # Rule 1: Take profit (per-ticker target)
+        if pnl_pct >= take_profit:
+            close_reason = f"PROFIT_TAKE (+{pnl_pct:.2f}%, target {take_profit}%)"
+
+        # Rule 2: Stop loss (per-ticker target)
+        elif pnl_pct <= stop_loss:
+            close_reason = f"STOP_LOSS ({pnl_pct:.2f}%, limit {stop_loss}%)"
 
         # Rule 3: Time-based scalp exit (>2 hours and profitable)
         elif hours_held > 2.0 and unrealized_pl > 0:
@@ -691,6 +739,116 @@ def monitor_open_positions():
             json.dump(active_scalps, f, indent=2)
 
 
+def check_for_dips():
+    """
+    Aggressive intraday dip buyer.
+    When the market has dropped significantly intraday, buy the dip.
+    Trump manipulation pattern: markets overreact down, then recover.
+    """
+    # HARD GATE: Never execute real trades outside market hours
+    now_et = datetime.now(timezone(timedelta(hours=-4)))  # ET approximation
+    hour = now_et.hour
+    if not (9 <= hour < 16):
+        print(f"  After-hours gate: {hour}:00 ET — skipping dip check")
+        return None
+
+    if not is_market_open():
+        return None
+
+    headers = alpaca_headers()
+
+    # Tickers to watch for dips
+    DIP_TARGETS = {
+        "SPY":  {"dip_threshold": -1.0, "target_pct": 1.2, "stop_pct": 0.5, "max_size": 2500},
+        "QQQ":  {"dip_threshold": -1.5, "target_pct": 1.5, "stop_pct": 0.5, "max_size": 2500},
+        "TSLA": {"dip_threshold": -3.0, "target_pct": 3.0, "stop_pct": 1.5, "max_size": 2500},
+        "NVDA": {"dip_threshold": -3.0, "target_pct": 2.5, "stop_pct": 1.5, "max_size": 2500},
+        "COIN": {"dip_threshold": -5.0, "target_pct": 4.0, "stop_pct": 2.0, "max_size": 2500},
+    }
+
+    # Get current positions to avoid doubling
+    try:
+        r = requests.get(f"{ALPACA_URL}/v2/positions", headers=headers, timeout=8)
+        held = {p["symbol"] for p in (r.json() if r.status_code == 200 else [])}
+        if len(held) >= 2:
+            return None  # already at max positions
+    except Exception:
+        return None
+
+    bought = []
+    for ticker, cfg in DIP_TARGETS.items():
+        if ticker in held:
+            continue
+
+        try:
+            # Get today open and current price via Alpaca bars
+            url = f"https://data.alpaca.markets/v2/stocks/{ticker}/bars"
+            params = {"timeframe": "1Day", "limit": 2, "feed": "iex"}
+            r = requests.get(url, params=params, headers=headers, timeout=8)
+            if r.status_code != 200:
+                continue
+            bars = r.json().get("bars", [])
+            if not bars:
+                continue
+
+            today_open = float(bars[-1]["o"])
+            current = float(bars[-1]["c"])
+            intraday_chg_pct = ((current - today_open) / today_open) * 100
+
+            if intraday_chg_pct <= cfg["dip_threshold"]:
+                # IT IS A DIP — BUY AGGRESSIVELY
+                shares = max(1, int(cfg["max_size"] / current))
+                print(f"  DIP DETECTED: {ticker} down {intraday_chg_pct:.1f}% today — BUYING {shares} shares @ ${current:.2f}")
+
+                order = submit_alpaca_order(ticker, shares, "buy")
+                if order:
+                    bought.append({
+                        "ticker": ticker,
+                        "shares": shares,
+                        "entry_price": current,
+                        "dip_pct": intraday_chg_pct,
+                        "target_pct": cfg["target_pct"],
+                        "stop_pct": cfg["stop_pct"],
+                        "reason": f"DIP_BUY ({intraday_chg_pct:.1f}% down)",
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "actual_ticker": ticker,
+                        "signal_category": "DIP_BUY",
+                        "direction": "LONG",
+                        "status": "OPEN",
+                        "trade_id": f"dip-{int(time.time())}-{ticker}",
+                        "position_value": current * shares,
+                    })
+                    held.add(ticker)
+                    if len(held) >= 2:
+                        break
+        except Exception as e:
+            print(f"  Dip check error {ticker}: {e}")
+
+    if bought:
+        # Save to active_scalps
+        scalps_file = os.path.join(DATA_DIR, "active_scalps.json")
+        existing = []
+        if os.path.exists(scalps_file):
+            try:
+                with open(scalps_file) as f:
+                    existing = json.load(f)
+            except Exception:
+                existing = []
+        existing.extend(bought)
+        with open(scalps_file, "w") as f:
+            json.dump(existing, f, indent=2)
+
+        # Send Telegram alert
+        msg = "*TrumpQuant DIP BUYER*\n\n"
+        for b in bought:
+            msg += f"*{b['ticker']}* DOWN {b['dip_pct']:.1f}% — BOUGHT {b['shares']} shares @ ${b['entry_price']:.2f}\n"
+            msg += f"   Target: +{b['target_pct']}% | Stop: -{b['stop_pct']}%\n\n"
+        msg += "_Aggressive dip buy — Trump manipulation recovery pattern_"
+        send_telegram(msg)
+
+    return bought
+
+
 def main():
     os.makedirs(DATA_DIR, exist_ok=True)
 
@@ -717,6 +875,10 @@ def main():
 
     # Monitor existing positions first (profit-taking / stop-loss)
     monitor_open_positions()
+
+    # Check for dips aggressively
+    if is_market_open():
+        check_for_dips()
 
     for post in posts:
         if post["id"] in seen:
