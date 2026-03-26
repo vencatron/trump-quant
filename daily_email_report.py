@@ -5,63 +5,80 @@ Run at 4:30pm ET every market day.
 """
 
 import json
+import logging
 import os
 import subprocess
 import sys
 from datetime import datetime, timezone, timedelta
 
+import requests
+
+from alpaca_utils import get_headers, ALPACA_URL
+
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-ALPACA_KEY = os.environ.get("ALPACA_API_KEY", "PKQ2P7KLMAJH5E3IQVKYQPTBOB")
-ALPACA_SECRET = os.environ.get("ALPACA_SECRET_KEY", "A58boqhagLVQH7tKfz7MafU8axJx6HGc9GbR4VgUFhrT")
-ALPACA_URL = "https://paper-api.alpaca.markets"
+ALPACA_KEY = os.environ.get("ALPACA_API_KEY", "")
+ALPACA_SECRET = os.environ.get("ALPACA_SECRET_KEY", "")
+
+logger = logging.getLogger("trumpquant.daily_email")
 
 RECIPIENTS = ["aaron@vencat.com", "ron@vencat.com"]
 SENDER_ACCOUNT = "ron@vencat.com"
 
-
-def alpaca_headers():
-    return {
-        "APCA-API-KEY-ID": ALPACA_KEY,
-        "APCA-API-SECRET-KEY": ALPACA_SECRET,
-    }
+if not ALPACA_KEY or not ALPACA_SECRET:
+    logger.warning("Alpaca API keys not set — account data will be unavailable")
 
 
-def get_account():
+def get_account() -> dict:
+    """Fetch Alpaca account summary; returns empty dict on failure."""
     try:
-        import requests
-        r = requests.get(f"{ALPACA_URL}/v2/account", headers=alpaca_headers(), timeout=10)
-        return r.json()
-    except:
-        return {}
+        r = requests.get(f"{ALPACA_URL}/v2/account", headers=get_headers(), timeout=10)
+        if r.status_code == 200:
+            return r.json()
+        logger.warning("Account fetch failed: HTTP %d", r.status_code)
+    except Exception as e:
+        logger.error("Account fetch error: %s", e)
+    return {}
 
 
-def get_positions():
+def get_positions() -> list:
+    """Fetch open Alpaca positions; returns [] on failure."""
     try:
-        import requests
-        r = requests.get(f"{ALPACA_URL}/v2/positions", headers=alpaca_headers(), timeout=10)
-        return r.json() if r.status_code == 200 else []
-    except:
-        return []
+        r = requests.get(f"{ALPACA_URL}/v2/positions", headers=get_headers(), timeout=10)
+        if r.status_code == 200:
+            result = r.json()
+            return result if isinstance(result, list) else []
+        logger.warning("Positions fetch failed: HTTP %d", r.status_code)
+    except Exception as e:
+        logger.error("Positions fetch error: %s", e)
+    return []
 
 
-def get_today_orders():
+def get_today_orders() -> list:
+    """Fetch today's orders from Alpaca; returns [] on failure."""
     try:
-        import requests
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         r = requests.get(
             f"{ALPACA_URL}/v2/orders",
             params={"status": "all", "limit": 50, "direction": "desc"},
-            headers=alpaca_headers(),
-            timeout=10
+            headers=get_headers(),
+            timeout=10,
         )
-        orders = r.json() if r.status_code == 200 else []
-        return [o for o in orders if isinstance(orders, list) and o.get("created_at", "").startswith(today)]
-    except:
-        return []
+        if r.status_code == 200:
+            orders = r.json()
+            if isinstance(orders, list):
+                return [o for o in orders if o.get("created_at", "").startswith(today)]
+        logger.warning("Orders fetch failed: HTTP %d", r.status_code)
+    except Exception as e:
+        logger.error("Orders fetch error: %s", e)
+    return []
 
 
-def get_today_pnl():
-    """Calculate today's realized P&L from bot_trades.json"""
+def get_today_pnl() -> tuple[float, list]:
+    """Calculate today's realized P&L from bot_trades.json.
+
+    Returns:
+        (total_pnl, trades_today) tuple.
+    """
     trades_file = os.path.join(DATA_DIR, "bot_trades.json")
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     total = 0.0
@@ -76,33 +93,21 @@ def get_today_pnl():
                     pnl = t.get("realized_pnl", t.get("pnl", 0))
                     total += float(pnl) if pnl else 0
                     trades_today.append(t)
-        except:
-            pass
+        except (json.JSONDecodeError, ValueError, TypeError) as e:
+            logger.error("Failed to load bot_trades.json: %s", e)
     return total, trades_today
 
 
-def get_swing_positions():
+def get_swing_positions() -> list:
+    """Load current swing positions from disk; returns [] on failure."""
     f = os.path.join(DATA_DIR, "swing_positions.json")
     if os.path.exists(f):
         try:
             with open(f) as fp:
                 return json.load(fp)
-        except:
-            pass
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.error("Failed to load swing_positions.json: %s", e)
     return []
-
-
-def get_iran_context():
-    """Quick web search for current Iran situation"""
-    try:
-        result = subprocess.run(
-            ["python3", "-c",
-             "import subprocess; r = subprocess.run(['openclaw','web','search','--query','Trump Iran war today market update'], capture_output=True, text=True, timeout=15); print(r.stdout[:500])"],
-            capture_output=True, text=True, timeout=20, cwd=os.path.dirname(__file__)
-        )
-        return result.stdout[:300] if result.stdout else "Iran situation: check news"
-    except:
-        return ""
 
 
 def build_html_report(account, positions, orders, today_pnl, trades_today, swing_positions, date_str):

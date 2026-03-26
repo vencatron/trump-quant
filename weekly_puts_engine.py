@@ -3,6 +3,7 @@ Sells weekly put options on target tickers to collect premium
 and get paid to wait for entry.
 """
 
+import fcntl
 import json
 import logging
 import os
@@ -61,15 +62,24 @@ def _save_json(path: str, data) -> None:
 
 
 def _queue_telegram(message: str) -> None:
-    """Append a message to the Telegram send queue."""
-    queue = _load_json(QUEUE_FILE)
-    queue.append({
-        "message": message,
-        "queued_at": datetime.now(timezone.utc).isoformat(),
-        "sent": False,
-    })
-    _save_json(QUEUE_FILE, queue)
-    logger.info("Telegram queued: %s", message[:80])
+    """Append a message to the Telegram send queue with file locking."""
+    lock_file = QUEUE_FILE + ".lock"
+    try:
+        with open(lock_file, "w") as lock_fd:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX)
+            try:
+                queue = _load_json(QUEUE_FILE)
+                queue.append({
+                    "message": message,
+                    "queued_at": datetime.now(timezone.utc).isoformat(),
+                    "sent": False,
+                })
+                _save_json(QUEUE_FILE, queue)
+                logger.info("Telegram queued: %s", message[:80])
+            finally:
+                fcntl.flock(lock_fd, fcntl.LOCK_UN)
+    except Exception as e:
+        logger.error("Failed to queue telegram message: %s", e)
 
 
 def _get_account() -> dict | None:

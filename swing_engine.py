@@ -53,59 +53,80 @@ SWING_SIGNALS = {
     ],
 }
 
-def alpaca_headers():
-    """Return Alpaca API headers. Delegates to shared alpaca_utils."""
-    return get_headers()
-
-def load_swing_positions():
+def load_swing_positions() -> list:
+    """Load swing positions from disk; return [] if missing or corrupt."""
     if os.path.exists(SWING_POSITIONS_FILE):
         try:
             with open(SWING_POSITIONS_FILE) as f:
                 return json.load(f)
-        except (json.JSONDecodeError, ValueError):
-            pass
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.warning("Corrupt swing positions file, resetting: %s", e)
     return []
 
-def save_swing_positions(positions):
-    with open(SWING_POSITIONS_FILE, "w") as f:
-        json.dump(positions, f, indent=2)
 
-def get_current_price(ticker):
+def save_swing_positions(positions: list) -> None:
+    """Atomically write swing positions to disk."""
+    tmp = SWING_POSITIONS_FILE + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(positions, f, indent=2)
+    os.replace(tmp, SWING_POSITIONS_FILE)
+
+
+def get_current_price(ticker: str) -> float | None:
     """Get latest price for a ticker. Delegates to shared alpaca_utils."""
     return get_price(ticker)
 
-def load_swing_trailing_stops():
+
+def load_swing_trailing_stops() -> dict:
+    """Load trailing stop state from disk; return {} if missing or corrupt."""
     if os.path.exists(SWING_TRAILING_FILE):
         try:
             with open(SWING_TRAILING_FILE) as f:
                 return json.load(f)
-        except:
-            pass
+        except (json.JSONDecodeError, ValueError) as e:
+            logger.warning("Corrupt trailing stops file, resetting: %s", e)
     return {}
 
-def save_swing_trailing_stops(stops):
-    with open(SWING_TRAILING_FILE, 'w') as f:
+
+def save_swing_trailing_stops(stops: dict) -> None:
+    """Atomically write trailing stops to disk."""
+    tmp = SWING_TRAILING_FILE + ".tmp"
+    with open(tmp, "w") as f:
         json.dump(stops, f, indent=2)
+    os.replace(tmp, SWING_TRAILING_FILE)
 
 
-def open_swing_position(ticker, direction, signal_category, thesis, target_pct, stop_pct, hold_days, conviction):
-    """Open a new swing position."""
+def open_swing_position(
+    ticker: str,
+    direction: str,
+    signal_category: str,
+    thesis: str,
+    target_pct: float,
+    stop_pct: float,
+    hold_days: int,
+    conviction: str,
+) -> dict | None:
+    """Open a new swing position; returns position dict or None if blocked.
+
+    Enforces max-position limit, duplicate-ticker guard, and order submission.
+    """
     positions = load_swing_positions()
 
     # Check limits
     if len(positions) >= MAX_SWING_POSITIONS:
-        logger.info("[SWING] Max positions reached ({MAX_SWING_POSITIONS}) — skipping {ticker}")
+        logger.info("[SWING] Max positions reached (%d) — skipping %s",
+                    MAX_SWING_POSITIONS, ticker)
         return None
 
     # No duplicate tickers
     held = {p["ticker"] for p in positions}
     if ticker in held:
-        logger.info("[SWING] Already holding {ticker} — skipping")
+        logger.info("[SWING] Already holding %s — skipping", ticker)
         return None
 
     price = get_current_price(ticker)
     if not price:
-        logger.info("[SWING] Cannot get price for {ticker}")
+        logger.warning("[SWING] Cannot get price for %s — skipping", ticker)
         return None
 
     shares = max(1, int(SWING_POSITION_SIZE / price))
@@ -114,7 +135,7 @@ def open_swing_position(ticker, direction, signal_category, thesis, target_pct, 
     # Submit order via shared utility with retry logic
     order = submit_order(ticker, shares, side)
     if not order:
-        logger.warning("[SWING] Order failed for %s %s %s", side, shares, ticker)
+        logger.error("[SWING] Order failed for %s %s %s — aborting open", side, shares, ticker)
         return None
 
     exit_date = (datetime.now(timezone.utc) + timedelta(days=hold_days)).isoformat()
@@ -140,10 +161,11 @@ def open_swing_position(ticker, direction, signal_category, thesis, target_pct, 
     positions.append(position)
     save_swing_positions(positions)
 
-    logger.info("[SWING] Opened: {direction} {shares}x {ticker} @ ${price:.2f} | target +{target_pct}% | hold {hold_days}d")
-    logger.info("[SWING] Thesis: {thesis}")
+    logger.info("[SWING] Opened: %s %dx %s @ $%.2f | target +%.1f%% | hold %dd",
+                direction, shares, ticker, price, target_pct, hold_days)
+    logger.info("[SWING] Thesis: %s", thesis)
 
-    # Log
+    # Log event
     with open(SWING_LOG_FILE, "a") as f:
         f.write(json.dumps({**position, "event": "OPEN"}) + "\n")
 
@@ -153,7 +175,7 @@ def open_swing_position(ticker, direction, signal_category, thesis, target_pct, 
             from options_engine import integrate_with_swing
             integrate_with_swing()
         except Exception as e:
-            logger.info(f"Covered call check skipped: {e}")
+            logger.info("Covered call check skipped: %s", e)
 
     return position
 
@@ -204,7 +226,8 @@ def monitor_swing_positions():
             if not trail_state.get('partial_taken', False):
                 total_qty = pos.get('shares', 0)
                 partial_qty = max(1, total_qty // 2)
-                print(f'  [SWING] PARTIAL EXIT: Closing {partial_qty}/{total_qty} of {ticker} at +{pnl_pct:.2f}%')
+                logger.info('[SWING] PARTIAL EXIT: Closing %d/%d of %s at +%.2f%%',
+                            partial_qty, total_qty, ticker, pnl_pct)
                 try:
                     side = 'sell' if pos['direction'] == 'BUY' else 'buy'
                     order = submit_order(ticker, partial_qty, side)
@@ -212,6 +235,8 @@ def monitor_swing_positions():
                         trail_state['partial_taken'] = True
                         pos['shares'] = total_qty - partial_qty
                         pos['position_value'] = pos['entry_price'] * pos['shares']
+                    else:
+                        logger.error("[SWING] Partial exit order failed for %s", ticker)
                 except Exception as e:
                     logger.error("[SWING] Partial exit error: %s", e)
         elif high_pct >= 2.0:
@@ -265,8 +290,9 @@ def monitor_swing_positions():
             with open(SWING_LOG_FILE, "a") as f:
                 f.write(json.dumps({**result, "event": "CLOSE"}) + "\n")
 
-            emoji = "+" if pnl_dollars >= 0 else "-"
-            logger.info("[SWING] {emoji} Closed {ticker}: {close_reason} | P&L: ${pnl_dollars:+.2f}")
+            emoji = "✅" if pnl_dollars >= 0 else "❌"
+            logger.info("[SWING] %s Closed %s: %s | P&L: $%+.2f",
+                        emoji, ticker, close_reason, pnl_dollars)
         else:
             pos["current_price"] = current
             pos["current_pnl_pct"] = pnl_pct

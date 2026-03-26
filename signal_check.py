@@ -3,21 +3,31 @@ TrumpQuant Signal Check v2 — runs once, fires Telegram alert + paper trades.
 Designed to be called by cron every 15-30 minutes.
 """
 
+import fcntl
 import json
+import logging
 import os
 import re
 import subprocess
 import sys
 import time
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 
 import requests
 
 # Add parent dir to path for imports
 sys.path.insert(0, os.path.dirname(__file__))
+from alpaca_utils import get_headers, get_price as alpaca_get_price, submit_order as alpaca_submit_order, ALPACA_URL
 from categorize import categorize_post
 from learning_engine import record_outcome
 from swing_engine import process_signal_for_swing, monitor_swing_positions, get_swing_summary
+
+logger = logging.getLogger("trumpquant.signal_check")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(name)s] %(levelname)s: %(message)s",
+)
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 CORR_FILE = os.path.join(DATA_DIR, "correlation_results.json")
@@ -48,13 +58,7 @@ SIGNAL_CATEGORIES = {
     "WAR_ESCALATION", "MUSK_TRUMP",
 }
 
-# Alpaca paper trading credentials — from environment only
-ALPACA_KEY = os.environ.get("ALPACA_API_KEY", "")
-ALPACA_SECRET = os.environ.get("ALPACA_SECRET_KEY", "")
-ALPACA_URL = "https://paper-api.alpaca.markets"
-
-if not ALPACA_KEY or not ALPACA_SECRET:
-    print("WARNING: Alpaca API keys not set in environment variables. Trading will fail.")
+# ALPACA_URL is imported from alpaca_utils — no need to redefine credentials here.
 
 # Inverse ETF mapping for SHORT signals
 INVERSE_MAP = {
@@ -289,99 +293,64 @@ def increment_daily_trade_count():
         json.dump(data, f, indent=2)
 
 
-def get_total_exposure():
+def get_total_exposure() -> float:
     """Get total $ exposure across all open Alpaca positions."""
     try:
         resp = requests.get(
             f"{ALPACA_URL}/v2/positions",
-            headers=alpaca_headers(),
-            timeout=8
+            headers=get_headers(),
+            timeout=8,
         )
         if resp.status_code == 200:
             positions = resp.json()
-            return sum(abs(float(p.get("market_value", 0))) for p in positions)
-    except Exception:
-        pass
-    return 0
+            if isinstance(positions, list):
+                return sum(abs(float(p.get("market_value", 0))) for p in positions)
+    except Exception as e:
+        logger.error("get_total_exposure error: %s", e)
+    return 0.0
 
 
-def get_position_for_ticker(ticker):
+def get_position_for_ticker(ticker: str) -> dict | None:
     """Get existing Alpaca position for a ticker, or None."""
     try:
         resp = requests.get(
             f"{ALPACA_URL}/v2/positions/{ticker}",
-            headers=alpaca_headers(),
-            timeout=8
+            headers=get_headers(),
+            timeout=8,
         )
         if resp.status_code == 200:
             return resp.json()
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error("get_position_for_ticker(%s) error: %s", ticker, e)
     return None
 
 
-def is_market_open():
-    """Check if US stock market is currently open (rough check)."""
-    now = datetime.now(timezone.utc)
-    # Market hours: 9:30 AM - 4:00 PM ET (14:30 - 21:00 UTC)
-    # Rough — doesn't account for holidays
-    hour_utc = now.hour
-    weekday = now.weekday()
+def is_market_open() -> bool:
+    """Check if US stock market is currently open.
+
+    Uses proper US/Eastern timezone — handles DST correctly.
+    Note: Does not account for market holidays.
+    """
+    now_et = datetime.now(ZoneInfo("America/New_York"))
+    weekday = now_et.weekday()
     if weekday >= 5:  # Saturday/Sunday
         return False
-    if hour_utc < 14 or (hour_utc == 14 and now.minute < 30):
+    h, m = now_et.hour, now_et.minute
+    if h < 9 or (h == 9 and m < 30):
         return False
-    if hour_utc >= 21:
+    if h >= 16:
         return False
     return True
 
 
-def alpaca_headers():
-    return {
-        "APCA-API-KEY-ID": ALPACA_KEY,
-        "APCA-API-SECRET-KEY": ALPACA_SECRET,
-        "Content-Type": "application/json",
-    }
+def get_current_price(ticker: str) -> float | None:
+    """Get latest price from Alpaca market data. Delegates to alpaca_utils."""
+    return alpaca_get_price(ticker)
 
 
-def get_current_price(ticker):
-    """Get latest price from Alpaca market data."""
-    try:
-        url = f"https://data.alpaca.markets/v2/stocks/{ticker}/quotes/latest"
-        resp = requests.get(url, headers=alpaca_headers(), timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            quote = data.get("quote", {})
-            mid = (quote.get("ap", 0) + quote.get("bp", 0)) / 2
-            if mid > 0:
-                return round(mid, 2)
-    except Exception as e:
-        print(f"  Price fetch error for {ticker}: {e}")
-    return None
-
-
-def submit_alpaca_order(ticker, qty, side="buy"):
-    """Submit a market order to Alpaca paper trading."""
-    url = f"{ALPACA_URL}/v2/orders"
-    payload = {
-        "symbol": ticker,
-        "qty": str(qty),
-        "side": side,
-        "type": "market",
-        "time_in_force": "day",
-    }
-    try:
-        resp = requests.post(url, json=payload, headers=alpaca_headers(), timeout=15)
-        if resp.status_code in (200, 201):
-            order = resp.json()
-            print(f"  ORDER SUBMITTED: {side.upper()} {qty} {ticker} — order_id={order.get('id', 'unknown')}")
-            return order
-        else:
-            print(f"  ORDER FAILED ({resp.status_code}): {resp.text[:200]}")
-            return None
-    except Exception as e:
-        print(f"  ORDER ERROR: {e}")
-        return None
+def submit_alpaca_order(ticker: str, qty: int, side: str = "buy") -> dict | None:
+    """Submit a market order to Alpaca. Delegates to alpaca_utils."""
+    return alpaca_submit_order(ticker, qty, side)
 
 
 def _normalize_headline(text):
@@ -413,7 +382,7 @@ def get_current_vix():
                 json.dump({'vix': vix_level, 'timestamp': time.time()}, f)
             return vix_level
     except Exception as e:
-        print(f'  VIX fetch error: {e}')
+        logger.error(f'  VIX fetch error: {e}')
     return None
 
 
@@ -430,10 +399,10 @@ def is_already_priced_in():
                 close_price = float(bars[-1]['c'])
                 daily_change = ((close_price - open_price) / open_price) * 100
                 if daily_change <= -1.0:
-                    print(f'  Already priced in: SPY {daily_change:.2f}% today')
+                    logger.info(f'  Already priced in: SPY {daily_change:.2f}% today')
                     return True
     except Exception as e:
-        print(f'  Priced-in check error: {e}')
+        logger.error(f'  Priced-in check error: {e}')
     return False
 
 
@@ -441,19 +410,21 @@ def execute_paper_trade(signal, post, category):
     """Execute a paper trade with full safety guards."""
     # GUARD: Daily trade limit
     if get_daily_trade_count() >= MAX_TRADES_PER_DAY:
-        print(f'  Skipping — hit daily trade limit ({MAX_TRADES_PER_DAY})')
+        logger.warning(f'  Skipping — hit daily trade limit ({MAX_TRADES_PER_DAY})')
         return None
 
     # GUARD: Signal cooldown
     if is_on_cooldown(category, signal["ticker"]):
-        print(f'  Skipping — {category}_{signal["ticker"]} on cooldown')
+        logger.warning(f'  Skipping — {category}_{signal["ticker"]} on cooldown')
         return None
 
     # HARD GATE: Never execute real trades outside market hours
-    now_et = datetime.now(timezone(timedelta(hours=-4)))  # ET approximation
+    # Use proper US/Eastern timezone — handles DST correctly
+    now_et = datetime.now(ZoneInfo("America/New_York"))
     hour = now_et.hour
-    if not (9 <= hour < 16):
-        print(f"  After-hours gate: {hour}:00 ET — skipping trade execution")
+    minute = now_et.minute
+    if not ((hour == 9 and minute >= 30) or (10 <= hour < 16)):
+        logger.info("After-hours gate: %02d:%02d ET — skipping trade execution", hour, minute)
         return None
 
     ticker = signal["ticker"]
@@ -463,12 +434,12 @@ def execute_paper_trade(signal, post, category):
 
     # Only execute HIGH confidence signals
     if confidence != "HIGH":
-        print(f"  Skipping trade — {confidence} confidence (need HIGH)")
+        logger.warning(f"  Skipping trade — {confidence} confidence (need HIGH)")
         return None
 
     market_open = is_market_open()
     if not market_open:
-        print(f"  Market closed — skipping trade entirely")
+        logger.warning(f"  Market closed — skipping trade entirely")
         return None
 
     # Determine actual ticker we'd trade
@@ -478,7 +449,7 @@ def execute_paper_trade(signal, post, category):
             side = "buy"
             trade_direction = "SHORT (via inverse ETF)"
         elif ticker == "COIN":
-            print(f"  SHORT COIN → no inverse ETF, skipping")
+            logger.warning(f"  SHORT COIN → no inverse ETF, skipping")
             return None
         else:
             actual_ticker = ticker
@@ -491,7 +462,7 @@ def execute_paper_trade(signal, post, category):
 
     # GUARD 1: Check if (post_id, ticker) already traded today
     if was_traded_today(post["id"], actual_ticker):
-        print(f"  Skipping — already traded {actual_ticker} for post {post['id']} today")
+        logger.warning(f"  Skipping — already traded {actual_ticker} for post {post['id']} today")
         return None
 
     # GUARD 2+4: Fetch all positions once — per-ticker dedup + concurrent position limit
@@ -506,22 +477,22 @@ def execute_paper_trade(signal, post, category):
         # Try fallback routing
         fallback = FALLBACK_MAP.get(actual_ticker)
         if fallback and fallback not in held_tickers:
-            print(f"  Routing to fallback: {fallback} ({actual_ticker} already held)")
+            logger.info(f"  Routing to fallback: {fallback} ({actual_ticker} already held)")
             actual_ticker = fallback
             side = "buy"
             trade_direction = f"LONG (fallback from {ticker})"
         else:
-            print(f"  Skipping — already holding {actual_ticker}, no fallback available")
+            logger.warning(f"  Skipping — already holding {actual_ticker}, no fallback available")
             return None
 
     if len(held_tickers) >= MAX_CONCURRENT_POSITIONS:
-        print(f"  Skipping — max {MAX_CONCURRENT_POSITIONS} concurrent positions ({len(held_tickers)}/{MAX_CONCURRENT_POSITIONS} held)")
+        logger.warning(f"  Skipping — max {MAX_CONCURRENT_POSITIONS} concurrent positions ({len(held_tickers)}/{MAX_CONCURRENT_POSITIONS} held)")
         return None
 
     # GUARD 3: Check total portfolio exposure
     total_exposure = sum(abs(float(p.get("market_value", 0))) for p in all_positions) if all_positions else 0
     if total_exposure >= MAX_DAILY_EXPOSURE:
-        print(f"  Skipping — total exposure ${total_exposure:.0f} >= ${MAX_DAILY_EXPOSURE} cap")
+        logger.warning(f"  Skipping — total exposure ${total_exposure:.0f} >= ${MAX_DAILY_EXPOSURE} cap")
         return None
 
     # HARD CAP position size: $2,500 regardless of multipliers
@@ -531,11 +502,11 @@ def execute_paper_trade(signal, post, category):
     if actual_ticker == 'UVIX':
         vix = get_current_vix()
         if vix is not None and vix >= VIX_REGIME_THRESHOLD:
-            print(f'  VIX regime block: VIX={vix:.1f} >= {VIX_REGIME_THRESHOLD} — UVIX not effective')
+            logger.warning(f'  VIX regime block: VIX={vix:.1f} >= {VIX_REGIME_THRESHOLD} — UVIX not effective')
             # Route to GLD or SQQQ instead
             for fallback_ticker in ['GLD', 'SQQQ']:
                 if fallback_ticker not in held_tickers:
-                    print(f'  VIX regime routing to {fallback_ticker}')
+                    logger.info(f'  VIX regime routing to {fallback_ticker}')
                     actual_ticker = fallback_ticker
                     side = 'buy'
                     trade_direction = f'LONG (VIX regime fallback from UVIX)'
@@ -549,13 +520,13 @@ def execute_paper_trade(signal, post, category):
     # GUARD: Already priced in — don't short if market already tanked
     if action == 'SHORT' or actual_ticker in ('SQQQ', 'SPXU'):
         if is_already_priced_in():
-            print(f'  Skipping — market drop already priced in')
+            logger.warning(f'  Skipping — market drop already priced in')
             return None
 
     # Get price and calculate shares
     price = get_current_price(actual_ticker)
     if not price or price <= 0:
-        print(f"  Skipping — couldn't get price for {actual_ticker}")
+        logger.warning(f"  Skipping — couldn't get price for {actual_ticker}")
         return None
 
     shares = max(1, int(adjusted_size / price))
@@ -576,7 +547,7 @@ def execute_paper_trade(signal, post, category):
 
     # Dry-run mode — skip actual order
     if DRY_RUN:
-        print(f'  [DRY-RUN] Would {side} {shares} {actual_ticker} @ ${price:.2f} (category={category})')
+        logger.info(f'  [DRY-RUN] Would {side} {shares} {actual_ticker} @ ${price:.2f} (category={category})')
         return {'dry_run': True, 'ticker': actual_ticker, 'shares': shares, 'price': price, 'side': side, 'category': category, 'direction': trade_direction, 'actual_ticker': actual_ticker, 'entry_price': price, 'position_value': shares * price, 'exit_strategy': 'DRY_RUN'}
 
     # Submit order
@@ -703,7 +674,7 @@ def get_bot_activity_score(ticker, lookback_minutes=30):
         return score
 
     except Exception as e:
-        print(f"  Bot activity score error for {ticker}: {e}")
+        logger.error(f"  Bot activity score error for {ticker}: {e}")
         return 50
 
 
@@ -732,7 +703,7 @@ def fetch_posts():
                     })
         return posts
     except Exception as e:
-        print(f"Fetch error: {e}")
+        logger.error(f"Fetch error: {e}")
         return []
 
 
@@ -766,33 +737,51 @@ def build_alert(post, categories, signal, trade=None):
     return msg
 
 
-def send_telegram(text):
-    """Send Telegram message via openclaw gateway system event (works from cron context)."""
+def send_telegram(text: str) -> bool:
+    """Send Telegram message via openclaw gateway system event (works from cron context).
+
+    Falls back to file queue if openclaw is unavailable. Queue writes are protected
+    by an exclusive file lock to prevent race conditions from concurrent cron runs.
+    """
     # Method 1: openclaw system event — triggers Hamilton to send the message
     try:
         result = subprocess.run(
             ["openclaw", "system", "event", "--text", f"TRUMPQUANT_ALERT: {text}", "--mode", "now"],
-            capture_output=True, text=True, timeout=15
+            capture_output=True, text=True, timeout=15,
         )
         if result.returncode == 0:
             return True
+        logger.warning("openclaw event failed (rc=%d): %s", result.returncode, result.stderr[:100])
     except Exception as e:
-        print(f"Telegram send error (method 1): {e}")
+        logger.warning("Telegram send error (method 1): %s", e)
 
-    # Method 2: Write to notification queue — Hamilton picks up on next run
+    # Method 2: Write to notification queue with file lock — Hamilton picks up on next run
+    queue_file = os.path.join(DATA_DIR, "telegram_queue.json")
+    lock_file = queue_file + ".lock"
     try:
-        queue_file = os.path.join(DATA_DIR, "telegram_queue.json")
-        queue = []
-        if os.path.exists(queue_file):
-            with open(queue_file) as f:
-                queue = json.load(f)
-        queue.append({"text": text, "ts": datetime.now(timezone.utc).isoformat()})
-        with open(queue_file, "w") as f:
-            json.dump(queue, f)
-        print(f"[Telegram queued]: {text[:80]}...")
-        return True
+        with open(lock_file, "w") as lock_fd:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX)
+            try:
+                queue = []
+                if os.path.exists(queue_file):
+                    try:
+                        with open(queue_file) as f:
+                            data = json.load(f)
+                            queue = data if isinstance(data, list) else []
+                    except (json.JSONDecodeError, ValueError):
+                        logger.warning("Corrupt telegram_queue.json — resetting")
+                        queue = []
+                queue.append({"text": text, "ts": datetime.now(timezone.utc).isoformat()})
+                tmp = queue_file + ".tmp"
+                with open(tmp, "w") as f:
+                    json.dump(queue, f, indent=2)
+                os.replace(tmp, queue_file)
+                logger.info("Telegram queued: %s", text[:80])
+                return True
+            finally:
+                fcntl.flock(lock_fd, fcntl.LOCK_UN)
     except Exception as e:
-        print(f"Telegram queue error: {e}")
+        logger.error("Telegram queue error: %s", e)
 
     return False
 
@@ -829,7 +818,7 @@ def monitor_open_positions():
             return
         positions = resp.json()
     except Exception as e:
-        print(f"  Monitor error: {e}")
+        logger.error(f"  Monitor error: {e}")
         return
 
     if not positions:
@@ -886,7 +875,7 @@ def monitor_open_positions():
             if not trail_state.get('partial_taken', False):
                 total_qty = int(pos.get('qty', 0))
                 partial_qty = max(1, total_qty // 2)
-                print(f'  PARTIAL EXIT: Closing {partial_qty}/{total_qty} of {ticker} at +{pnl_pct:.2f}%')
+                logger.info(f'  PARTIAL EXIT: Closing {partial_qty}/{total_qty} of {ticker} at +{pnl_pct:.2f}%')
                 try:
                     payload = {'symbol': ticker, 'qty': str(partial_qty), 'side': 'sell', 'type': 'market', 'time_in_force': 'day'}
                     resp = requests.post(f'{ALPACA_URL}/v2/orders', json=payload, headers=headers, timeout=10)
@@ -897,7 +886,7 @@ def monitor_open_positions():
                         msg = f'{emoji} *TrumpQuant Partial Exit*\n\nTicker: {ticker}\nClosed: {partial_qty}/{total_qty} shares\nP&L: +{pnl_pct:.2f}%\nRest trailing at {trail_state["trail_stop_pct"]:.1f}%'
                         send_telegram(msg)
                 except Exception as e:
-                    print(f'  Partial exit error: {e}')
+                    logger.error(f'  Partial exit error: {e}')
         elif high_pct >= 0.5:
             trail_state['trail_stop_pct'] = 0  # breakeven
 
@@ -927,7 +916,7 @@ def monitor_open_positions():
             close_reason = f'STALE_POSITION ({hours_held:.1f}h)'
 
         if close_reason:
-            print(f"  MONITOR: Closing {ticker} — {close_reason}")
+            logger.info(f"  MONITOR: Closing {ticker} — {close_reason}")
             try:
                 resp = requests.delete(
                     f"{ALPACA_URL}/v2/positions/{ticker}",
@@ -975,9 +964,9 @@ def monitor_open_positions():
                     }
                     try:
                         record_outcome(trade_result)
-                        print(f'  Learning engine: recorded outcome for {ticker}')
+                        logger.info(f'  Learning engine: recorded outcome for {ticker}')
                     except Exception as e:
-                        print(f'  Learning engine error: {e}')
+                        logger.error(f'  Learning engine error: {e}')
 
                     # Telegram notification
                     emoji = "💰" if unrealized_pl >= 0 else "🛑"
@@ -990,9 +979,9 @@ def monitor_open_positions():
                     )
                     send_telegram(msg)
                 else:
-                    print(f"  Failed to close {ticker}: HTTP {resp.status_code}")
+                    logger.error(f"  Failed to close {ticker}: HTTP {resp.status_code}")
             except Exception as e:
-                print(f"  Failed to close {ticker}: {e}")
+                logger.error(f"  Failed to close {ticker}: {e}")
 
     # Remove closed positions from active_scalps
     if closed_tickers:
@@ -1011,10 +1000,11 @@ def check_for_dips():
     Trump manipulation pattern: markets overreact down, then recover.
     """
     # HARD GATE: Never execute real trades outside market hours
-    now_et = datetime.now(timezone(timedelta(hours=-4)))  # ET approximation
+    now_et = datetime.now(ZoneInfo("America/New_York"))
     hour = now_et.hour
-    if not (9 <= hour < 16):
-        print(f"  After-hours gate: {hour}:00 ET — skipping dip check")
+    minute = now_et.minute
+    if not ((hour == 9 and minute >= 30) or (10 <= hour < 16)):
+        logger.debug("After-hours gate: %02d:%02d ET — skipping dip check", hour, minute)
         return None
 
     if not is_market_open():
@@ -1063,7 +1053,7 @@ def check_for_dips():
             if intraday_chg_pct <= cfg["dip_threshold"]:
                 # IT IS A DIP — BUY AGGRESSIVELY
                 shares = max(1, int(cfg["max_size"] / current))
-                print(f"  DIP DETECTED: {ticker} down {intraday_chg_pct:.1f}% today — BUYING {shares} shares @ ${current:.2f}")
+                logger.info(f"  DIP DETECTED: {ticker} down {intraday_chg_pct:.1f}% today — BUYING {shares} shares @ ${current:.2f}")
 
                 order = submit_alpaca_order(ticker, shares, "buy")
                 if order:
@@ -1087,7 +1077,7 @@ def check_for_dips():
                     if len(held) >= 2:
                         break
         except Exception as e:
-            print(f"  Dip check error {ticker}: {e}")
+            logger.error(f"  Dip check error {ticker}: {e}")
 
     if bought:
         # Save to active_scalps
@@ -1124,7 +1114,7 @@ def main():
             from regime_detector import detect_regime
             detect_regime()
         except Exception as e:
-            print(f"Regime detection skipped: {e}")
+            logger.warning(f"Regime detection skipped: {e}")
 
     # Apply learned weights to signals
     try:
@@ -1165,7 +1155,7 @@ def main():
 
         # GUARD: Max trades per run
         if trades_this_run >= MAX_TRADES_PER_RUN:
-            print(f"  Hit MAX_TRADES_PER_RUN ({MAX_TRADES_PER_RUN}) — skipping remaining posts")
+            logger.warning(f"  Hit MAX_TRADES_PER_RUN ({MAX_TRADES_PER_RUN}) — skipping remaining posts")
             break
 
         cat_result = categorize_post(post["text"])
@@ -1208,7 +1198,7 @@ def main():
                 trades_this_run += 1
                 # Build and send alert
                 alert = build_alert(post, categories, best_signal, trade)
-                print(f"FIRING ALERT: {post['text'][:80]}...")
+                logger.info(f"FIRING ALERT: {post['text'][:80]}...")
                 if not DRY_RUN:
                     send_telegram(alert)
                 fired += 1
@@ -1243,14 +1233,14 @@ def main():
                     pass
 
     save_seen(seen)
-    print(f"Done. Checked {len(posts)} posts, fired {fired} alerts, "
-          f"trades this run: {trades_this_run}, seen pool: {len(seen)}")
-    print("ADD MONITOR CRON: */5 9-16 * * 1-5 America/Los_Angeles — python3 signal_check.py monitor")
+    logger.info("Done. Checked %d posts, fired %d alerts, trades this run: %d, seen pool: %d",
+                len(posts), fired, trades_this_run, len(seen))
+    logger.info("ADD MONITOR CRON: */5 9-16 * * 1-5 America/Los_Angeles — python3 signal_check.py monitor")
 
 
 def close_eod_positions():
     """Close all open paper positions at EOD with logging."""
-    print("=== EOD CLOSE TRIGGERED ===")
+    logger.info("=== EOD CLOSE TRIGGERED ===")
 
     trades_file = os.path.join(DATA_DIR, "active_scalps.json")
     active = []
@@ -1269,7 +1259,7 @@ def close_eod_positions():
         resp = requests.get(f"{ALPACA_URL}/v2/positions", headers=headers, timeout=10)
         positions = resp.json() if resp.status_code == 200 else []
     except Exception as e:
-        print(f"Failed to fetch positions: {e}")
+        logger.error(f"Failed to fetch positions: {e}")
         positions = []
 
     # Close each position
@@ -1280,11 +1270,11 @@ def close_eod_positions():
             if resp.status_code in (200, 204):
                 pnl = float(pos.get("unrealized_pl", 0))
                 closed.append({"ticker": ticker, "pnl": pnl, "reason": "EOD"})
-                print(f"  Closed {ticker}: ${pnl:+.2f}")
+                logger.info(f"  Closed {ticker}: ${pnl:+.2f}")
             else:
-                print(f"  Failed to close {ticker}: HTTP {resp.status_code}")
+                logger.error(f"  Failed to close {ticker}: HTTP {resp.status_code}")
         except Exception as e:
-            print(f"  Failed to close {ticker}: {e}")
+            logger.error(f"  Failed to close {ticker}: {e}")
 
     # Write EOD log
     eod_entry = {
@@ -1352,9 +1342,9 @@ def close_eod_positions():
                 }
                 record_outcome(trade_result)
         except Exception as e:
-            print(f"  Learning engine error: {e}")
+            logger.error(f"  Learning engine error: {e}")
     else:
-        print("  No positions to close")
+        logger.info("  No positions to close")
         send_telegram("📊 *TrumpQuant EOD Close*\n\nNo positions to close.")
 
     # Clear active scalps
@@ -1364,13 +1354,13 @@ def close_eod_positions():
     # Reset traded_today
     save_traded_today({"date": "", "trades": []})
 
-    print(f"=== EOD CLOSE COMPLETE: {len(closed)} positions closed ===")
+    logger.info(f"=== EOD CLOSE COMPLETE: {len(closed)} positions closed ===")
     return closed
 
 
 if __name__ == "__main__":
     if DRY_RUN:
-        print("[DRY-RUN MODE] No real orders or Telegram messages will be sent.")
+        logger.info("[DRY-RUN MODE] No real orders or Telegram messages will be sent.")
     args = [a for a in sys.argv[1:] if a != '--dry-run']
     if args and args[0] == "eod":
         close_eod_positions()

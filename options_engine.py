@@ -1,6 +1,7 @@
 """MarketQuant Options Engine — Covered Calls.
 Sells covered calls against existing swing positions to generate income."""
 
+import fcntl
 import json
 import logging
 import os
@@ -55,15 +56,24 @@ def _save_json(path, data):
         json.dump(data, f, indent=2, default=str)
 
 
-def _queue_telegram(message: str):
-    """Append a message to the telegram queue."""
-    queue = _load_json(TELEGRAM_QUEUE, [])
-    queue.append({
-        "message": message,
-        "queued_at": datetime.now(timezone.utc).isoformat(),
-        "source": "options_engine",
-    })
-    _save_json(TELEGRAM_QUEUE, queue)
+def _queue_telegram(message: str) -> None:
+    """Append a message to the telegram queue with file locking to prevent races."""
+    lock_file = TELEGRAM_QUEUE + ".lock"
+    try:
+        with open(lock_file, "w") as lock_fd:
+            fcntl.flock(lock_fd, fcntl.LOCK_EX)
+            try:
+                queue = _load_json(TELEGRAM_QUEUE, [])
+                queue.append({
+                    "message": message,
+                    "queued_at": datetime.now(timezone.utc).isoformat(),
+                    "source": "options_engine",
+                })
+                _save_json(TELEGRAM_QUEUE, queue)
+            finally:
+                fcntl.flock(lock_fd, fcntl.LOCK_UN)
+    except Exception as e:
+        logger.error("Failed to queue telegram message: %s", e)
 
 
 # ---------------------------------------------------------------------------
